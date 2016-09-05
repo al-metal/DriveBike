@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using web;
@@ -141,8 +142,38 @@ namespace DriveBike
         private void btnActualCategory_Click(object sender, EventArgs e)
         {
             string otv = null;
+            //System.Net.CookieContainer cookie = webRequest.webCookie("http://www.drivebike.ru/");
 
             otv = webRequest.getRequest("http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla?limit=60");
+            MatchCollection categoriesUrls = new Regex("(?<=<li class=\"amshopby-cat amshopby-cat-level-1\">)[\\w\\W]*?(?=</li>)").Matches(otv);
+            for(int i = 0; categoriesUrls.Count > i; i++)
+            {
+                string categories = new Regex("(?<=<a href=\").*?(?=\">)").Match(categoriesUrls[i].ToString()).ToString();
+                otv = webRequest.getRequest(categories);
+                MatchCollection availability = new Regex("(?<=<p class=\"availability).*?(?=</span></p>)").Matches(otv);
+                MatchCollection urlTovars = new Regex("(?<=<li class=\"item)[\\w\\W]*?(?=\" title=\")").Matches(otv);
+                if(availability.Count == urlTovars.Count)
+                {
+                    for(int n = 0; urlTovars.Count > n; n++)
+                    {
+                        string availabilityTovar = availability[n].ToString();
+                        if (availabilityTovar.Contains("Есть в наличии"))
+                        {
+                            //Если товар в наличии
+                            string url = new Regex("(?<=a href=\").*").Match(urlTovars[n].ToString()).ToString();
+                            otv = webRequest.getRequest(url);
+                        }
+                        else
+                        {
+                            //Если товара нет в наличии
+                        }
+                    }
+                }
+                else
+                {
+                    //Если разное кол-во ссылок на товар и наличия товара
+                }
+            }
         }
     }
 }
