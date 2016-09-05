@@ -168,6 +168,24 @@ namespace DriveBike
                             string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otv).ToString();
                             string miniText = new Regex("(?<=<tbody>)[\\w\\W]*?(?=</tbody>)").Match(otv).ToString().Replace("\n", "").Replace("    ", " ").Replace("   ", " ").Replace("  ", " ").Replace("  ", " ");
                             string fullText = new Regex("(?<=<meta itemprop=\"description\" content=\").*?(?=\" />)").Match(otv).ToString();
+                            otv = webRequest.getRequest("http://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + articl);
+                            MatchCollection searchTovars = new Regex("(?<=title=\").*?(?=\")").Matches(otv);
+                            if(searchTovars.Count > 0)
+                            {
+                                for(int m = 0; searchTovars.Count > m; m++)
+                                {
+                                    string searchTovarName = searchTovars[m].ToString();
+                                    if(searchTovarName == nameTovar)
+                                    {
+                                        //товар есть и надо проверить цену
+                                    }
+                                    else
+                                    {
+                                        //товара нету необходимо добавить
+                                    }
+                                }
+                            }
+
                         }
                         else
                         {
