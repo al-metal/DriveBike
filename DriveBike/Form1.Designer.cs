@@ -38,6 +38,7 @@
             this.lblTitle = new System.Windows.Forms.Label();
             this.lblDescription = new System.Windows.Forms.Label();
             this.lblKeywords = new System.Windows.Forms.Label();
+            this.btnSaveTemplate = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // rtbMiniText
@@ -122,11 +123,22 @@
             this.lblKeywords.TabIndex = 9;
             this.lblKeywords.Text = "Ключевые слова";
             // 
+            // btnSaveTemplate
+            // 
+            this.btnSaveTemplate.Location = new System.Drawing.Point(686, 498);
+            this.btnSaveTemplate.Name = "btnSaveTemplate";
+            this.btnSaveTemplate.Size = new System.Drawing.Size(187, 23);
+            this.btnSaveTemplate.TabIndex = 10;
+            this.btnSaveTemplate.Text = "Сохранить шаблон";
+            this.btnSaveTemplate.UseVisualStyleBackColor = true;
+            this.btnSaveTemplate.Click += new System.EventHandler(this.btnSaveTemplate_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(876, 524);
+            this.Controls.Add(this.btnSaveTemplate);
             this.Controls.Add(this.lblKeywords);
             this.Controls.Add(this.lblDescription);
             this.Controls.Add(this.lblTitle);
@@ -157,6 +169,7 @@
         private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.Label lblDescription;
         private System.Windows.Forms.Label lblKeywords;
+        private System.Windows.Forms.Button btnSaveTemplate;
     }
 }
 

@@ -90,5 +90,49 @@ namespace DriveBike
             }
             altText.Close();
         }
+
+        private void btnSaveTemplate_Click(object sender, EventArgs e)
+        {
+            int count = 0;
+            StreamWriter writers = new StreamWriter("files\\miniText.txt", false, Encoding.GetEncoding(1251));
+            count = rtbMiniText.Lines.Length;
+            for (int i = 0; rtbMiniText.Lines.Length > i; i++)
+            {
+                if (count - 1 == i)
+                {
+                    if (rtbFullText.Lines[i] == "")
+                        break;
+                }
+                writers.WriteLine(rtbMiniText.Lines[i].ToString());
+            }
+            writers.Close();
+
+            writers = new StreamWriter("files\\fullText.txt", false, Encoding.GetEncoding(1251));
+            count = rtbFullText.Lines.Length;
+            for (int i = 0; count > i; i++)
+            {
+                if (count - 1 == i)
+                {
+                    if (rtbFullText.Lines[i] == "")
+                        break;
+                }
+                writers.WriteLine(rtbFullText.Lines[i].ToString());
+            }
+            writers.Close();
+
+            writers = new StreamWriter("files\\title.txt", false, Encoding.GetEncoding(1251));
+            writers.WriteLine(tbTitle.Lines[0]);
+            writers.Close();
+
+            writers = new StreamWriter("files\\description.txt", false, Encoding.GetEncoding(1251));
+            writers.WriteLine(tbDescription.Lines[0]);
+            writers.Close();
+
+            writers = new StreamWriter("files\\keywords.txt", false, Encoding.GetEncoding(1251));
+            writers.WriteLine(tbKeywords.Lines[0]);
+            writers.Close();
+
+            MessageBox.Show("Сохранено");
+        }
     }
 }
