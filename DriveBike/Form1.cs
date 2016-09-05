@@ -8,11 +8,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using web;
 
 namespace DriveBike
 {
     public partial class Form1 : Form
     {
+        WebRequest webRequest = new WebRequest();
+
         public Form1()
         {
             InitializeComponent();
@@ -133,6 +136,13 @@ namespace DriveBike
             writers.Close();
 
             MessageBox.Show("Сохранено");
+        }
+
+        private void btnActualCategory_Click(object sender, EventArgs e)
+        {
+            string otv = null;
+
+            otv = webRequest.getRequest("http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla?limit=60");
         }
     }
 }
