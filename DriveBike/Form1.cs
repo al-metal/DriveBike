@@ -162,6 +162,12 @@ namespace DriveBike
                             //Если товар в наличии
                             string url = new Regex("(?<=a href=\").*").Match(urlTovars[n].ToString()).ToString();
                             otv = webRequest.getRequest(url);
+
+                            string nameTovar = new Regex("(?<=<br/>).*(?=</h1>)").Match(otv).ToString();
+                            string articl = new Regex("(?<=<div class=\"std\">Код товара:).*?(?=<br /> )").Match(otv).ToString();
+                            string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otv).ToString();
+                            string miniText = new Regex("(?<=<tbody>)[\\w\\W]*?(?=</tbody>)").Match(otv).ToString().Replace("\n", "").Replace("    ", " ").Replace("   ", " ").Replace("  ", " ").Replace("  ", " ");
+                            string fullText = new Regex("(?<=<meta itemprop=\"description\" content=\").*?(?=\" />)").Match(otv).ToString();
                         }
                         else
                         {
