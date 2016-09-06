@@ -180,8 +180,8 @@ namespace DriveBike
                             string miniText = new Regex("(?<=<tbody>)[\\w\\W]*?(?=</tbody>)").Match(otv).ToString().Replace("\n", "").Replace("    ", " ").Replace("   ", " ").Replace("  ", " ").Replace("  ", " ");
                             string fullText = new Regex("(?<=<meta itemprop=\"description\" content=\").*?(?=\" />)").Match(otv).ToString();
 
-                            
-                            otv = webRequest.getRequest("http://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + articl);
+                            bool b = false;
+                            otv = webRequest.getRequest("http://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + nameTovar);
                             MatchCollection searchTovars = new Regex("(?<=title=\").*?(?=\")").Matches(otv);
                             if(searchTovars.Count > 0)
                             {
@@ -190,57 +190,63 @@ namespace DriveBike
                                     string searchTovarName = searchTovars[m].ToString();
                                     if(searchTovarName == nameTovar)
                                     {
-                                        //товар есть и надо проверить цену
-                                    }
-                                    else
-                                    {
-                                        //товара нету необходимо добавить
-                                        string slug = chpu.vozvr(nameTovar);
-
-                                        string razdel = "Запчасти и расходники => Расходники для японских, европейских, американских мотоциклов => " + razdelDB;
-                                        string miniTextTemplate = MinitextStr();
-                                        string titleText = null;
-                                        string descriptionText = null;
-                                        string keywordsText = null;
-                                        string fullTextTemplate = FulltextStr();
-                                        int priceActual = webRequest.price(Convert.ToInt32(price), discounts);
-
-                                        string dblProduct = "НАЗВАНИЕ также подходит для: аналогичных моделей.";
-                                        titleText = tbTitle.Lines[0].ToString();
-                                        descriptionText = tbDescription.Lines[0].ToString();
-                                        keywordsText = tbKeywords.Lines[0].ToString();
-
-
-                                        newProduct = new List<string>();
-                                        newProduct.Add(""); //id
-                                        newProduct.Add("\"" + articl + "\""); //артикул
-                                        newProduct.Add("\"" + nameTovar + "\"");  //название
-                                        newProduct.Add("\"" + priceActual + "\""); //стоимость
-                                        newProduct.Add("\"" + "" + "\""); //со скидкой
-                                        newProduct.Add("\"" + razdel + "\""); //раздел товара
-                                        newProduct.Add("\"" + "100" + "\""); //в наличии
-                                        newProduct.Add("\"" + "0" + "\"");//поставка
-                                        newProduct.Add("\"" + "1" + "\"");//срок поставки
-                                        newProduct.Add("\"" + miniTextTemplate + "\"");//краткий текст
-                                        newProduct.Add("\"" + fullTextTemplate + "\"");//полностью текст
-                                        newProduct.Add("\"" + titleText + "\""); //заголовок страницы
-                                        newProduct.Add("\"" + descriptionText + "\""); //описание
-                                        newProduct.Add("\"" + keywordsText + "\"");//ключевые слова
-                                        newProduct.Add("\"" + slug + "\""); //ЧПУ
-                                        newProduct.Add(""); //с этим товаром покупают
-                                        newProduct.Add("");   //рекламные метки
-                                        newProduct.Add("\"" + "1" + "\"");  //показывать
-                                        newProduct.Add("\"" + "0" + "\""); //удалить
-
-                                        files.fileWriterCSV(newProduct, "naSite");
+                                        //товар найден
+                                        b = true;
+                                        break;
                                     }
                                 }
+                            }
+                            if (b)
+                            {
+                                //товар найден и надо обновить цену
+                            }
+                            else
+                            {
+                                //товара нету и следует его добавить
+                                string slug = chpu.vozvr(nameTovar);
+
+                                string razdel = "Запчасти и расходники => Расходники для японских, европейских, американских мотоциклов => " + razdelDB;
+                                string miniTextTemplate = MinitextStr();
+                                string titleText = null;
+                                string descriptionText = null;
+                                string keywordsText = null;
+                                string fullTextTemplate = FulltextStr();
+                                int priceActual = webRequest.price(Convert.ToInt32(price), discounts);
+
+                                string dblProduct = "НАЗВАНИЕ также подходит для: аналогичных моделей.";
+                                titleText = tbTitle.Lines[0].ToString();
+                                descriptionText = tbDescription.Lines[0].ToString();
+                                keywordsText = tbKeywords.Lines[0].ToString();
+
+
+                                newProduct = new List<string>();
+                                newProduct.Add(""); //id
+                                newProduct.Add("\"" + articl + "\""); //артикул
+                                newProduct.Add("\"" + nameTovar + "\"");  //название
+                                newProduct.Add("\"" + priceActual + "\""); //стоимость
+                                newProduct.Add("\"" + "" + "\""); //со скидкой
+                                newProduct.Add("\"" + razdel + "\""); //раздел товара
+                                newProduct.Add("\"" + "100" + "\""); //в наличии
+                                newProduct.Add("\"" + "0" + "\"");//поставка
+                                newProduct.Add("\"" + "1" + "\"");//срок поставки
+                                newProduct.Add("\"" + miniTextTemplate + "\"");//краткий текст
+                                newProduct.Add("\"" + fullTextTemplate + "\"");//полностью текст
+                                newProduct.Add("\"" + titleText + "\""); //заголовок страницы
+                                newProduct.Add("\"" + descriptionText + "\""); //описание
+                                newProduct.Add("\"" + keywordsText + "\"");//ключевые слова
+                                newProduct.Add("\"" + slug + "\""); //ЧПУ
+                                newProduct.Add(""); //с этим товаром покупают
+                                newProduct.Add("");   //рекламные метки
+                                newProduct.Add("\"" + "1" + "\"");  //показывать
+                                newProduct.Add("\"" + "0" + "\""); //удалить
+
+                                files.fileWriterCSV(newProduct, "naSite");
                             }
 
                         }
                         else
                         {
-                            //Если товара нет в наличии
+                            //Если товара нет в наличии добавить и пометить ссылкой нет в наличии
                         }
                     }
                 }
