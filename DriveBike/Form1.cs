@@ -158,7 +158,8 @@ namespace DriveBike
             for(int i = 0; categoriesUrls.Count > i; i++)
             {
                 string categories = new Regex("(?<=<a href=\").*?(?=\">)").Match(categoriesUrls[i].ToString()).ToString();
-                string razdelDB = new Regex("(?<=\">).*?(?=</a>)").Match(categoriesUrls[i].ToString()).ToString();
+                string section1 = "Расходники для японских, европейских, американских мотоциклов";
+                string section2 = new Regex("(?<=\">).*?(?=</a>)").Match(categoriesUrls[i].ToString()).ToString();
                 otv = webRequest.getRequest(categories);
                 MatchCollection availability = new Regex("(?<=<p class=\"availability).*?(?=</span></p>)").Matches(otv);
                 MatchCollection urlTovars = new Regex("(?<=<li class=\"item)[\\w\\W]*?(?=\" title=\")").Matches(otv);
@@ -176,6 +177,7 @@ namespace DriveBike
                             string nameTovar = new Regex("(?<=<h1><font style=\"color:#459B06; \">).*(?=</h1>)").Match(otv).ToString();
                             nameTovar = nameTovar.Replace("</font><br/>", " ");
                             string articl = new Regex("(?<=<div class=\"std\">Код товара:).*?(?=<br /> )").Match(otv).ToString();
+                            string number = new Regex("(?<=<br /> Номер по каталогу: ).*?(?=<br />)").Match(otv).ToString();
                             string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otv).ToString();
                             string miniText = new Regex("(?<=<tbody>)[\\w\\W]*?(?=</tbody>)").Match(otv).ToString().Replace("\n", "").Replace("    ", " ").Replace("   ", " ").Replace("  ", " ").Replace("  ", " ");
                             string fullText = new Regex("(?<=<meta itemprop=\"description\" content=\").*?(?=\" />)").Match(otv).ToString();
@@ -205,18 +207,27 @@ namespace DriveBike
                                 //товара нету и следует его добавить
                                 string slug = chpu.vozvr(nameTovar);
 
-                                string razdel = "Запчасти и расходники => Расходники для японских, европейских, американских мотоциклов => " + razdelDB;
+                                string razdel = "Запчасти и расходники => Расходники для японских, европейских, американских мотоциклов => " + section2;
                                 string miniTextTemplate = MinitextStr();
-                                string titleText = null;
-                                string descriptionText = null;
-                                string keywordsText = null;
                                 string fullTextTemplate = FulltextStr();
+                                string titleText = tbTitle.Lines[0].ToString();
+                                string descriptionText = tbDescription.Lines[0].ToString();
+                                string keywordsText = tbKeywords.Lines[0].ToString();
                                 int priceActual = webRequest.price(Convert.ToInt32(price), discounts);
 
                                 string dblProduct = "НАЗВАНИЕ также подходит для: аналогичных моделей.";
-                                titleText = tbTitle.Lines[0].ToString();
-                                descriptionText = tbDescription.Lines[0].ToString();
-                                keywordsText = tbKeywords.Lines[0].ToString();
+
+                                miniTextTemplate = Replace(miniTextTemplate, section2, section1, dblProduct, nameTovar, articl, miniText, fullText);
+                                miniTextTemplate = miniTextTemplate.Replace(" class=\"label\"", "").Replace(" class=\"data\"", "");
+                                miniTextTemplate = miniTextTemplate.Remove(miniTextTemplate.LastIndexOf("<p>"));
+
+                                fullTextTemplate = Replace(fullTextTemplate, section2, section1, dblProduct, nameTovar, articl, miniText, fullText);
+                                fullTextTemplate = fullTextTemplate.Remove(fullTextTemplate.LastIndexOf("<p>"));
+                                fullTextTemplate = fullTextTemplate.Remove(fullTextTemplate.LastIndexOf("<p>"));
+
+                                titleText = ReplaceSEO(titleText, nameTovar, section1, section2, articl, dblProduct, number);
+                                descriptionText = ReplaceSEO(descriptionText, nameTovar, section1, section2, articl, dblProduct, number);
+                                keywordsText = ReplaceSEO(keywordsText, nameTovar, section1, section2, articl, dblProduct, number);
 
 
                                 newProduct = new List<string>();
@@ -315,6 +326,29 @@ namespace DriveBike
                 }
             }
             return fullText;
+        }
+
+        private string Replace(string text, string section2, string section1, string dblProduct, string nameTovar, string article, string miniText, string fullText)
+        {
+            string discount = Discount();
+            string nameText = boldOpen + nameTovar + boldClose;
+            string nameRazdel = boldOpen + section1 + boldClose;
+            string namePodrazdel = boldOpen + section2 + boldClose;
+            text = text.Replace("СКИДКА", discount).Replace("ПОДРАЗДЕЛ", namePodrazdel).Replace("РАЗДЕЛ", nameRazdel).Replace("ДУБЛЬ", dblProduct).Replace("НАЗВАНИЕ", nameText).Replace("АРТИКУЛ", article).Replace("МИНИТЕКСТ", miniText).Replace("ТЕКСТ", fullText).Replace("<p><br /></p><p><br /></p><p><br /></p><p>", "<p><br /></p>");
+            return text;
+        }
+
+        private string ReplaceSEO(string text, string nameTovarRacerMotors, string section1, string section2, string article, string dblProduct, string number)
+        {
+            string discount = Discount();
+            text = text.Replace("СКИДКА", discount).Replace("ПОДРАЗДЕЛ", section2).Replace("РАЗДЕЛ", section1).Replace("ДУБЛЬ", dblProduct).Replace("НАЗВАНИЕ", nameTovarRacerMotors).Replace("АРТИКУЛ", article).Replace("НОМЕР", number);
+            return text;
+        }
+
+        private string Discount()
+        {
+            string discount = "<p style=\"\"text-align: right;\"\"><span style=\"\"font -weight: bold; font-weight: bold;\"\"> Сделай ТРОЙНОЙ удар по нашим ценам! </span></p><p style=\"\"text-align: right;\"\"><span style=\"\"font -weight: bold; font-weight: bold;\"\"> 1. <a target=\"\"_blank\"\" href =\"\"http://bike18.ru/stock\"\"> Скидки за отзывы о товарах!</a> </span></p><p style=\"\"text-align: right;\"\"><span style=\"\"font -weight: bold; font-weight: bold;\"\"> 2. <a target=\"\"_blank\"\" href =\"\"http://bike18.ru/stock\"\"> Друзьям скидки и подарки!</a> </span></p><p style=\"\"text-align: right;\"\"><span style=\"\"font -weight: bold; font-weight: bold;\"\"> 3. <a target=\"\"_blank\"\" href =\"\"http://bike18.ru/stock\"\"> Нашли дешевле!? 110% разницы Ваши!</a></span></p>";
+            return discount;
         }
     }
 }
