@@ -26,6 +26,7 @@ namespace DriveBike
         string boldClose = "</span>";
         double discounts = 0.02;
         FileEdit files = new FileEdit();
+        string otv = null;
 
         public Form1()
         {
@@ -151,7 +152,6 @@ namespace DriveBike
 
         private void btnActualCategory_Click(object sender, EventArgs e)
         {
-            string otv = null;
             File.Delete("naSite.csv");
             File.Delete("allProducts.csv");
             List<string> newProduct = newList();
@@ -186,11 +186,11 @@ namespace DriveBike
                             {
 
                             }
-                            
+
 
                             string nameTovar = new Regex("(?<=<h1><font style=\"color:#459B06; \">).*(?=</h1>)").Match(otv).ToString();
                             nameTovar = nameTovar.Replace("</font><br/>", " ");
-                            
+
                             string number = new Regex("(?<=<br /> Номер по каталогу: ).*?(?=<br />)").Match(otv).ToString();
                             string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otv).ToString();
                             MatchCollection Text = new Regex("(?<=<div class=\"std\">)[\\w\\W]*?(?=</div>)").Matches(otv);
@@ -217,6 +217,25 @@ namespace DriveBike
                             if (b)
                             {
                                 //товар найден и надо обновить цену
+                                string urlTovar = null;
+                                int priceActual = webRequest.price(Convert.ToInt32(price), discounts);
+                                MatchCollection searchTovarsBike = new Regex("(?<=<div class=\"product-link -text-center\"><a href=\").*?(?=\" >)").Matches(otv);
+                                for(int m = 0; searchTovarsBike.Count > m; m++)
+                                {
+                                    string searchNameTovar = new Regex("(?<=" + searchTovarsBike[m].ToString() + "\" >).*?(?=</a>)").Match(otv).ToString();
+                                    if (searchNameTovar == nameTovar)
+                                    {
+                                        urlTovar = searchTovarsBike[m].ToString();
+                                        List<string> listProd = webRequest.arraySaveimage(urlTovar);
+                                        int priceBike = Convert.ToInt32(listProd[9].ToString());
+                                        if(priceBike != priceActual)
+                                        {
+                                            listProd[9] = priceActual.ToString();
+                                            webRequest.saveTovar(listProd);
+                                        }
+                                        break;
+                                    }
+                                }                                    
                             }
                             else
                             {
@@ -347,7 +366,7 @@ namespace DriveBike
         private void btnUpdateImages_Click(object sender, EventArgs e)
         {
             CookieContainer cookie = webRequest.webCookieBike18();
-            string otv = webRequest.getRequest("http://bike18.nethouse.ru/products/category/2426429");
+            otv = webRequest.getRequest("http://bike18.nethouse.ru/products/category/2426429");
             MatchCollection razdels = new Regex("(?<=<div class=\"category-capt-txt -text-center\"><a href=\").*?(?=\" class=\"blue\">)").Matches(otv);
             for (int i = 0; razdels.Count > i; i++)
             {
@@ -362,7 +381,6 @@ namespace DriveBike
                     {
                         articl = new Regex("(?<=Артикул:)[\\w\\W]*(?=</title>)").Match(otv).ToString().Trim();
                     }
-                    //articl = articl.Trim();
                     if (File.Exists("pic\\ " + articl + ".jpg"))
                     {
                         MatchCollection prId = new Regex("(?<=data-id=\").*?(?=\")").Matches(otv);
@@ -410,6 +428,7 @@ namespace DriveBike
                             string otvSave = SaveImages(urlSaveImg, prodId, widthImg, heigthImg);
                             List<string> listProd = webRequest.arraySaveimage(urlTovar);
                             listProd[3] = "10833347";
+                            listProd[42] = alsoBuyTovars(listProd);
                             otv = webRequest.saveTovar(listProd);
                             if (otv.Contains("errors"))
                             {
@@ -434,7 +453,7 @@ namespace DriveBike
                     }
                 }
             }
-
+            MessageBox.Show("Обновление завершено");
         }
 
         private List<string> newList()
@@ -582,7 +601,24 @@ namespace DriveBike
             return otvimg;
         }
 
-        
+        private string alsoBuyTovars(List<string> tovarList)
+        {
+            string name = tovarList[4].ToString();
+            otv = webRequest.getRequest("http://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + name);
+            MatchCollection searchTovars = new Regex("(?<=<div class=\"product-item preview-size-156\" id=\"item).*?(?=\"><div class=\"background\">)").Matches(otv);
+            string alsoBuy = "";
+            int count = 0;
+            if (searchTovars.Count > 1)
+            {
+                for (int i = 1; 5 > i; i++)
+                {
+
+                    alsoBuy += "&alsoBuy[" + count + "]=" + searchTovars[i].ToString();
+                    count++;
+                }
+            }
+            return alsoBuy;
+        }
 
         public string DownloadImages(string artProd)
         {
