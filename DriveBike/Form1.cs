@@ -229,6 +229,10 @@ namespace DriveBike
                                 descriptionText = ReplaceSEO(descriptionText, nameTovar, section1, section2, articl, dblProduct, number);
                                 keywordsText = ReplaceSEO(keywordsText, nameTovar, section1, section2, articl, dblProduct, number);
 
+                                titleText = Remove(titleText, 255);
+                                descriptionText = Remove(descriptionText, 200);
+                                keywordsText = Remove(keywordsText, 100);
+                                slug = Remove(slug, 64);
 
                                 newProduct = new List<string>();
                                 newProduct.Add(""); //id
@@ -349,6 +353,16 @@ namespace DriveBike
         {
             string discount = "<p style=\"\"text-align: right;\"\"><span style=\"\"font -weight: bold; font-weight: bold;\"\"> Сделай ТРОЙНОЙ удар по нашим ценам! </span></p><p style=\"\"text-align: right;\"\"><span style=\"\"font -weight: bold; font-weight: bold;\"\"> 1. <a target=\"\"_blank\"\" href =\"\"http://bike18.ru/stock\"\"> Скидки за отзывы о товарах!</a> </span></p><p style=\"\"text-align: right;\"\"><span style=\"\"font -weight: bold; font-weight: bold;\"\"> 2. <a target=\"\"_blank\"\" href =\"\"http://bike18.ru/stock\"\"> Друзьям скидки и подарки!</a> </span></p><p style=\"\"text-align: right;\"\"><span style=\"\"font -weight: bold; font-weight: bold;\"\"> 3. <a target=\"\"_blank\"\" href =\"\"http://bike18.ru/stock\"\"> Нашли дешевле!? 110% разницы Ваши!</a></span></p>";
             return discount;
+        }
+
+        private string Remove(string text, int v)
+        {
+            if (text.Length > v)
+            {
+                text = text.Remove(v);
+                text = text.Remove(text.LastIndexOf(" "));
+            }
+            return text;
         }
     }
 }
