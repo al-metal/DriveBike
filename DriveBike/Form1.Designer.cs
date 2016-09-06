@@ -40,6 +40,7 @@
             this.lblKeywords = new System.Windows.Forms.Label();
             this.btnSaveTemplate = new System.Windows.Forms.Button();
             this.btnActualCategory = new System.Windows.Forms.Button();
+            this.btnUpdateImages = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // rtbMiniText
@@ -144,11 +145,22 @@
             this.btnActualCategory.UseVisualStyleBackColor = true;
             this.btnActualCategory.Click += new System.EventHandler(this.btnActualCategory_Click);
             // 
+            // btnUpdateImages
+            // 
+            this.btnUpdateImages.Location = new System.Drawing.Point(704, 59);
+            this.btnUpdateImages.Name = "btnUpdateImages";
+            this.btnUpdateImages.Size = new System.Drawing.Size(160, 26);
+            this.btnUpdateImages.TabIndex = 12;
+            this.btnUpdateImages.Text = "Обновить картинки";
+            this.btnUpdateImages.UseVisualStyleBackColor = true;
+            this.btnUpdateImages.Click += new System.EventHandler(this.btnUpdateImages_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(876, 524);
+            this.Controls.Add(this.btnUpdateImages);
             this.Controls.Add(this.btnActualCategory);
             this.Controls.Add(this.btnSaveTemplate);
             this.Controls.Add(this.lblKeywords);
@@ -183,6 +195,7 @@
         private System.Windows.Forms.Label lblKeywords;
         private System.Windows.Forms.Button btnSaveTemplate;
         private System.Windows.Forms.Button btnActualCategory;
+        private System.Windows.Forms.Button btnUpdateImages;
     }
 }
 

@@ -488,5 +488,21 @@ namespace DriveBike
             string otvimg = ressrImg.ReadToEnd();
             return otvimg;
         }
+
+        private void btnUpdateImages_Click(object sender, EventArgs e)
+        {
+            string otv = webRequest.getRequest("http://bike18.nethouse.ru/products/category/2426429");
+            MatchCollection razdels = new Regex("(?<=<div class=\"category-capt-txt -text-center\"><a href=\").*?(?=\" class=\"blue\">)").Matches(otv);
+            for(int i = 0; razdels.Count > i; i++)
+            {
+                otv = webRequest.getRequest(razdels[i].ToString() + "/page/all");
+                MatchCollection tovars = new Regex("(?<=<div class=\"product-link -text-center\"><a href=\").*?(?=\" >)").Matches(otv);
+                for(int n = 0; tovars.Count > n; n++)
+                {
+
+                }
+            }
+
+        }
     }
 }
