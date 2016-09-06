@@ -20,6 +20,7 @@ namespace DriveBike
     {
         web.WebRequest webRequest = new web.WebRequest();
         CHPU chpu = new CHPU();
+        WebClient webClient = new WebClient();
         int addCount = 0;
         string boldOpen = "<span style=\"\"font-weight: bold; font-weight: bold; \"\">";
         string boldClose = "</span>";
@@ -157,7 +158,7 @@ namespace DriveBike
 
             otv = webRequest.getRequest("http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla?limit=60");
             MatchCollection categoriesUrls = new Regex("(?<=<li class=\"amshopby-cat amshopby-cat-level-1\">)[\\w\\W]*?(?=</li>)").Matches(otv);
-            for(int i = 0; categoriesUrls.Count > i; i++)
+            for (int i = 0; categoriesUrls.Count > i; i++)
             {
                 string categories = new Regex("(?<=<a href=\").*?(?=\">)").Match(categoriesUrls[i].ToString()).ToString();
                 string section1 = "Расходники для японских, европейских, американских мотоциклов";
@@ -165,9 +166,9 @@ namespace DriveBike
                 otv = webRequest.getRequest(categories);
                 MatchCollection availability = new Regex("(?<=<p class=\"availability).*?(?=</span></p>)").Matches(otv);
                 MatchCollection urlTovars = new Regex("(?<=<li class=\"item)[\\w\\W]*?(?=\" title=\")").Matches(otv);
-                if(availability.Count == urlTovars.Count)
+                if (availability.Count == urlTovars.Count)
                 {
-                    for(int n = 0; urlTovars.Count > n; n++)
+                    for (int n = 0; urlTovars.Count > n; n++)
                     {
                         string availabilityTovar = availability[n].ToString();
                         if (availabilityTovar.Contains("Есть в наличии"))
@@ -175,26 +176,37 @@ namespace DriveBike
                             //Если товар в наличии
                             string url = new Regex("(?<=a href=\").*").Match(urlTovars[n].ToString()).ToString();
                             otv = webRequest.getRequest(url);
+                            string urlImageProduct = new Regex("(?<=<img src=\")http://www.drivebike.ru/media/catalog/product/.*?(?=\" />)").Match(otv).ToString();
+                            string articl = new Regex("(?<=<div class=\"std\">Код товара:).*?(?=<br /> )").Match(otv).ToString();
+                            try
+                            {
+                                webClient.DownloadFile(urlImageProduct, "pic\\" + articl + ".jpg");
+                            }
+                            catch
+                            {
+
+                            }
+                            
 
                             string nameTovar = new Regex("(?<=<h1><font style=\"color:#459B06; \">).*(?=</h1>)").Match(otv).ToString();
                             nameTovar = nameTovar.Replace("</font><br/>", " ");
-                            string articl = new Regex("(?<=<div class=\"std\">Код товара:).*?(?=<br /> )").Match(otv).ToString();
+                            
                             string number = new Regex("(?<=<br /> Номер по каталогу: ).*?(?=<br />)").Match(otv).ToString();
                             string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otv).ToString();
                             MatchCollection Text = new Regex("(?<=<div class=\"std\">)[\\w\\W]*?(?=</div>)").Matches(otv);
                             string table = new Regex("<table[\\w\\W]*?</table>").Match(otv).ToString().Replace("\n        ", "").Replace("            ", " ").Replace("  ", " ").Replace("    ", " ").Replace("        ", " ").Replace("  ", "").Replace("\n", "").Replace(" class=\"data\"", "").Replace(" class=\"label\"", "").Replace(" class=\"data-table\" id=\"product-attribute-specs-table\"><col width=\"25%\" /><col /", "");
                             string miniText = Text[0].ToString();
-                            string fullText = Text[1].ToString().Replace("\n", "") + "\n" + table;
+                            string fullText = Text[1].ToString().Replace("\n", "") + "<br /> " + table;
 
                             bool b = false;
                             otv = webRequest.getRequest("http://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + nameTovar);
-                            MatchCollection searchTovars = new Regex("(?<=title=\").*?(?=\")").Matches(otv);
-                            if(searchTovars.Count > 0)
+                            MatchCollection searchTovars = new Regex("(?<=\" >).*?(?=</a>)").Matches(otv);
+                            if (searchTovars.Count > 0)
                             {
-                                for(int m = 0; searchTovars.Count > m; m++)
+                                for (int m = 0; searchTovars.Count > m; m++)
                                 {
                                     string searchTovarName = searchTovars[m].ToString();
-                                    if(searchTovarName == nameTovar)
+                                    if (searchTovarName == nameTovar)
                                     {
                                         //товар найден
                                         b = true;
@@ -261,7 +273,6 @@ namespace DriveBike
 
                                 files.fileWriterCSV(newProduct, "naSite");
                             }
-
                         }
                         else
                         {
@@ -274,6 +285,7 @@ namespace DriveBike
                     //Если разное кол-во ссылок на товар и наличия товара
                 }
             }
+            #region
             System.Threading.Thread.Sleep(20000);
             string trueOtv = null;
             string[] naSite1 = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
@@ -328,6 +340,8 @@ namespace DriveBike
                 }
                 while (trueOtv != "2");
             }
+            #endregion
+            MessageBox.Show("Обновлено товаров на сайте");
         }
 
         private List<string> newList()
