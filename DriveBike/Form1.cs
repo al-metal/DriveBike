@@ -158,47 +158,47 @@ namespace DriveBike
             otv = webRequest.getRequest("http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla?limit=60");
             MatchCollection categoriesUrls = new Regex("(?<=<li class=\"amshopby-cat amshopby-cat-level-1\">)[\\w\\W]*?(?=</li>)").Matches(otv);
 
-            for (int i = 0; categoriesUrls.Count > i; i++)
+            for (int i = 3; categoriesUrls.Count > i; i++)
             {
                 string categories = new Regex("(?<=<a href=\").*?(?=\">)").Match(categoriesUrls[i].ToString()).ToString();
-                    File.Delete("naSite.csv");
-                    newProduct = newList();
-                    File.Delete("noAvailability");
-                    MatchCollection pagesUrl = null;
-                    //string categories = categories = new Regex("(?<=<a href=\").*?(?=\">)").Match(categoriesUrls[i].ToString()).ToString();
-                    string section1 = "Расходники для японских, европейских, американских мотоциклов";
-                    string section2 = new Regex("(?<=\">).*?(?=</a>)").Match(categoriesUrls[i].ToString()).ToString();
-                    otv = webRequest.getRequest(categories);
-                    string pagesDivString = new Regex("(?<=<div class=\"pages\">)[\\w\\W]*?(?=</div>)").Match(otv).ToString().Trim();
-                    if (pagesDivString != "")
+                File.Delete("naSite.csv");
+                newProduct = newList();
+                File.Delete("noAvailability");
+                MatchCollection pagesUrl = null;
+                //string categories = categories = new Regex("(?<=<a href=\").*?(?=\">)").Match(categoriesUrls[i].ToString()).ToString();
+                string section1 = "Расходники для японских, европейских, американских мотоциклов";
+                string section2 = new Regex("(?<=\">).*?(?=</a>)").Match(categoriesUrls[i].ToString()).ToString();
+                otv = webRequest.getRequest(categories);
+                string pagesDivString = new Regex("(?<=<div class=\"pages\">)[\\w\\W]*?(?=</div>)").Match(otv).ToString().Trim();
+                if (pagesDivString != "")
+                {
+                    pagesUrl = new Regex("(?<=<li><a href=\").*?(?=\">)").Matches(pagesDivString);
+                }
+                MatchCollection availability = new Regex("(?<=<p class=\"availability).*?(?=</span></p>)").Matches(otv);
+                MatchCollection urlTovars = new Regex("(?<=<li class=\"item)[\\w\\W]*?(?=\" title=\")").Matches(otv);
+                if (availability.Count == urlTovars.Count)
+                {
+                    for (int n = 0; urlTovars.Count > n; n++)
                     {
-                        pagesUrl = new Regex("(?<=<li><a href=\").*?(?=\">)").Matches(pagesDivString);
-                    }
-                    MatchCollection availability = new Regex("(?<=<p class=\"availability).*?(?=</span></p>)").Matches(otv);
-                    MatchCollection urlTovars = new Regex("(?<=<li class=\"item)[\\w\\W]*?(?=\" title=\")").Matches(otv);
-                    if (availability.Count == urlTovars.Count)
-                    {
-                        for (int n = 0; urlTovars.Count > n; n++)
-                        {
                         string availabilityTovar = availability[n].ToString();
                         string url = new Regex("(?<=a href=\").*").Match(urlTovars[n].ToString()).ToString();
                         otv = webRequest.getRequest(url);
                         string urlImageProduct = new Regex("(?<=<img src=\")http://www.drivebike.ru/media/catalog/product/.*?(?=\" />)").Match(otv).ToString();
-                        string articl = new Regex("(?<=<div class=\"std\">Код товара:).*?(?=<br /> )").Match(otv).ToString().Trim();
+                        string articl = new Regex("(?<=Код товара: ).*?(?=<br />)").Match(otv).ToString().Trim();
                         dowloadImagesTovar(urlImageProduct, articl);
                         string nameTovar = ReturnNameTovar(otv);
                         string analogs = "Данный товар имеет схожие позиции <br />";
                         string number = new Regex("(?<=<br /> Номер по каталогу: ).*?(?=<br />)").Match(otv).ToString();
                         string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otv).ToString();
                         MatchCollection Text = new Regex("(?<=<div class=\"std\">)[\\w\\W]*?(?=</div>)").Matches(otv);
-                        string table = ReturnTable(otv); 
+                        string table = ReturnTable(otv);
                         string miniText = Text[0].ToString() + analogs;
                         string fullText = Text[1].ToString().Replace("\n", "") + "<br /> " + table;
 
                         if (price == "")
-                         {
+                        {
                             MatchCollection podTovars = new Regex("(?<=<tr>)[\\w\\W]*?(?=</tr>)").Matches(otv);
-                            foreach(Match tovar in podTovars)
+                            foreach (Match tovar in podTovars)
                             {
                                 string tv = tovar.ToString();
                                 if (tv.Contains("<td>"))
@@ -209,7 +209,7 @@ namespace DriveBike
                                     string availabilityPodTovar = new Regex("(?<=<p class=\"availability out-of-stock\">).*(?=</span></p>)").Match(tv).ToString();
                                     fullText = new Regex("(?<=<h2>Подробности</h2>)[\\w\\W]*?(?=<h2>Дополнительная информация</h2>)").Match(otv).ToString();
                                     MatchCollection tegs = new Regex("<.*>").Matches(fullText);
-                                    foreach(Match str in tegs)
+                                    foreach (Match str in tegs)
                                     {
                                         fullText = fullText.Replace(str.ToString(), "");
                                     }
@@ -376,30 +376,29 @@ namespace DriveBike
                 {
                     for (int t = 0; pagesUrl.Count > t; t++)
                     {
-                            #region
-                            //-*-------------------------------------------------------------------------------------------------------------------------------------------
-                            otv = webRequest.getRequest(pagesUrl[t].ToString());
+                        #region
+                        //-*-------------------------------------------------------------------------------------------------------------------------------------------
+                        otv = webRequest.getRequest(pagesUrl[t].ToString());
 
-                            availability = new Regex("(?<=<p class=\"availability).*?(?=</span></p>)").Matches(otv);
-                            urlTovars = new Regex("(?<=<li class=\"item)[\\w\\W]*?(?=\" title=\")").Matches(otv);
-                            if (availability.Count == urlTovars.Count)
+                        availability = new Regex("(?<=<p class=\"availability).*?(?=</span></p>)").Matches(otv);
+                        urlTovars = new Regex("(?<=<li class=\"item)[\\w\\W]*?(?=\" title=\")").Matches(otv);
+                        if (availability.Count == urlTovars.Count)
+                        {
+                            for (int n = 0; urlTovars.Count > n; n++)
                             {
-                                for (int n = 0; urlTovars.Count > n; n++)
-                                {
-                                    string availabilityTovar = availability[n].ToString();
-                                    string url = new Regex("(?<=a href=\").*").Match(urlTovars[n].ToString()).ToString();
-                                    otv = webRequest.getRequest(url);
-                                    string urlImageProduct = new Regex("(?<=<img src=\")http://www.drivebike.ru/media/catalog/product/.*?(?=\" />)").Match(otv).ToString();
-                                    string articl = new Regex("(?<=<div class=\"std\">Код товара:).*?(?=<br /> )").Match(otv).ToString().Trim();
+                                string availabilityTovar = availability[n].ToString();
+                                string url = new Regex("(?<=a href=\").*").Match(urlTovars[n].ToString()).ToString();
+                                otv = webRequest.getRequest(url);
+                                string urlImageProduct = new Regex("(?<=<img src=\")http://www.drivebike.ru/media/catalog/product/.*?(?=\" />)").Match(otv).ToString();
+                                string articl = new Regex("(?<=<div class=\"std\">Код товара:).*?(?=<br /> )").Match(otv).ToString().Trim();
                                 dowloadImagesTovar(urlImageProduct, articl);
                                 string nameTovar = ReturnNameTovar(otv);
                                 string number = new Regex("(?<=<br /> Номер по каталогу: ).*?(?=<br />)").Match(otv).ToString();
-                                    string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otv).ToString();
-                                    MatchCollection Text = new Regex("(?<=<div class=\"std\">)[\\w\\W]*?(?=</div>)").Matches(otv);
-                                    string table = ReturnTable(otv);
-                                    string miniText = Text[0].ToString();
-                                    string fullText = Text[1].ToString().Replace("\n", "") + "<br /> " + table;
-                                
+                                string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otv).ToString();
+                                MatchCollection Text = new Regex("(?<=<div class=\"std\">)[\\w\\W]*?(?=</div>)").Matches(otv);
+                                string table = ReturnTable(otv);
+                                string miniText = Text[0].ToString();
+                                string fullText = Text[1].ToString().Replace("\n", "") + "<br /> " + table;
                                 if (price == "")
                                 {
                                     MatchCollection podTovars = new Regex("(?<=<tr>)[\\w\\W]*?(?=</tr>)").Matches(otv);
@@ -571,101 +570,101 @@ namespace DriveBike
                                         write.Close();
                                     }
                                 }
-                                
-                                }
+
                             }
-                            else
-                            {
-                                //Если разное кол-во ссылок на товар и наличия товара
-                            }
-                            #endregion
-                            //--------------------------------------------------------------------------------------------------------------------------------------------------
                         }
+                        else
+                        {
+                            //Если разное кол-во ссылок на товар и наличия товара
+                        }
+                        #endregion
+                        //--------------------------------------------------------------------------------------------------------------------------------------------------
                     }
+                }
 
 
-                    //загружаем на сайт
-                    #region
-                    System.Threading.Thread.Sleep(20000);
-                    string trueOtv = null;
-                    string[] naSite1 = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
-                    if (naSite1.Length > 1)
+                //загружаем на сайт
+                #region
+                System.Threading.Thread.Sleep(20000);
+                string trueOtv = null;
+                string[] naSite1 = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
+                if (naSite1.Length > 1)
+                {
+                    do
                     {
+                        string otvimg = DownloadNaSite();
+                        string check = "{\"success\":true,\"imports\":{\"state\":1,\"errorCode\":0,\"errorLine\":0}}";
                         do
                         {
-                            string otvimg = DownloadNaSite();
-                            string check = "{\"success\":true,\"imports\":{\"state\":1,\"errorCode\":0,\"errorLine\":0}}";
-                            do
-                            {
-                                System.Threading.Thread.Sleep(2000);
-                                otvimg = ChekedLoading();
-                            }
-                            while (otvimg == check);
-
-                            trueOtv = new Regex("(?<=\":{\"state\":).*?(?=,\")").Match(otvimg).ToString();
-                            string error = new Regex("(?<=errorCode\":).*?(?=,\")").Match(otvimg).ToString();
-                            if (error == "13")
-                            {
-                                ErrorDownloadInSite13(otvimg);
-                            }
-                            if (error == "37")
-                            {
-                                ErrorDownloadInSite37(otvimg);
-                            }
-                            if (error == "10")
-                            {
-
-                            }
+                            System.Threading.Thread.Sleep(2000);
+                            otvimg = ChekedLoading();
                         }
-                        while (trueOtv != "2");
-                    }
-                    #endregion
+                        while (otvimg == check);
 
-                    //обновляем наличие товара
-                    #region
-
-                    System.Threading.Thread.Sleep(70000);
-                    if (File.Exists("noAvailability"))
-                    {
-                        string[] noAvailabilityArr = File.ReadAllLines("noAvailability");
-                        if (noAvailabilityArr.Length > 0)
+                        trueOtv = new Regex("(?<=\":{\"state\":).*?(?=,\")").Match(otvimg).ToString();
+                        string error = new Regex("(?<=errorCode\":).*?(?=,\")").Match(otvimg).ToString();
+                        if (error == "13")
                         {
-                            for (int z = 0; noAvailabilityArr.Length > z; z++)
+                            ErrorDownloadInSite13(otvimg);
+                        }
+                        if (error == "37")
+                        {
+                            ErrorDownloadInSite37(otvimg);
+                        }
+                        if (error == "10")
+                        {
+
+                        }
+                    }
+                    while (trueOtv != "2");
+                }
+                #endregion
+
+                //обновляем наличие товара
+                #region
+
+                System.Threading.Thread.Sleep(70000);
+                if (File.Exists("noAvailability"))
+                {
+                    string[] noAvailabilityArr = File.ReadAllLines("noAvailability");
+                    if (noAvailabilityArr.Length > 0)
+                    {
+                        for (int z = 0; noAvailabilityArr.Length > z; z++)
+                        {
+                            string[] str = noAvailabilityArr[z].Split(';');
+                            string articl = str[0];
+                            string name = str[1];
+
+                            otv = webRequest.getRequest("http://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + name);
+                            MatchCollection searchTovars = new Regex("(?<=\" >).*?(?=</a>)").Matches(otv);
+                            bool b = ReturnBoolB(searchTovars, name);
+
+                            if (b)
                             {
-                                string[] str = noAvailabilityArr[z].Split(';');
-                                string articl = str[0];
-                                string name = str[1];
-
-                                otv = webRequest.getRequest("http://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + name);
-                                MatchCollection searchTovars = new Regex("(?<=\" >).*?(?=</a>)").Matches(otv);
-                                bool b = ReturnBoolB(searchTovars, name);
-                                
-                                if (b)
+                                //товар найден и надо обновить цену
+                                string urlTovar = null;
+                                MatchCollection searchTovarsBike = new Regex("(?<=<div class=\"product-link -text-center\"><a href=\").*?(?=\" >)").Matches(otv);
+                                for (int m = 0; searchTovarsBike.Count > m; m++)
                                 {
-                                    //товар найден и надо обновить цену
-                                    string urlTovar = null;
-                                    MatchCollection searchTovarsBike = new Regex("(?<=<div class=\"product-link -text-center\"><a href=\").*?(?=\" >)").Matches(otv);
-                                    for (int m = 0; searchTovarsBike.Count > m; m++)
+                                    string searchNameTovar = new Regex("(?<=" + searchTovarsBike[m].ToString() + "\" >).*?(?=</a>)").Match(otv).ToString();
+                                    if (searchNameTovar == name)
                                     {
-                                        string searchNameTovar = new Regex("(?<=" + searchTovarsBike[m].ToString() + "\" >).*?(?=</a>)").Match(otv).ToString();
-                                        if (searchNameTovar == name)
-                                        {
-                                            urlTovar = searchTovarsBike[m].ToString();
-                                            List<string> listProd = webRequest.arraySaveimage(urlTovar);
-                                            listProd[43] = "0";
+                                        urlTovar = searchTovarsBike[m].ToString();
+                                        List<string> listProd = webRequest.arraySaveimage(urlTovar);
+                                        listProd[43] = "0";
 
-                                            webRequest.saveTovar(listProd);
-                                            break;
-                                        }
+                                        webRequest.saveTovar(listProd);
+                                        break;
                                     }
                                 }
                             }
                         }
                     }
+                }
 
-                    #endregion
-                    File.Delete("noAvailability");
-                    //--
+                #endregion
+                File.Delete("noAvailability");
+                //--
             }
 
             #endregion
@@ -949,11 +948,12 @@ namespace DriveBike
                                                 urlTovar = searchTovarsBike[m].ToString();
                                                 List<string> listProd = webRequest.arraySaveimage(urlTovar);
                                                 int priceBike = 0;
-                                                try { priceBike = Convert.ToInt32(listProd[9].ToString()); } catch
+                                                try { priceBike = Convert.ToInt32(listProd[9].ToString()); }
+                                                catch
                                                 {
 
                                                 }
-                                                
+
 
                                                 if (!availabilityTovar.Contains("Есть в наличии"))
                                                 {
@@ -1170,14 +1170,14 @@ namespace DriveBike
                     //    }
 
                     //    #endregion
-                        File.Delete("noAvailability");
-                        //--
+                    File.Delete("noAvailability");
+                    //--
                     //}
 
                 }
             }
-                MessageBox.Show("Обновлено товаров на сайте");
-              
+            MessageBox.Show("Обновлено товаров на сайте");
+
         }
 
         private void SaveProductInCSV(List<string> newProduct, string articl, string nameTovar, int priceActual, string razdel, string miniTextTemplate, string fullTextTemplate, string titleText, string descriptionText, string keywordsText, string slug)
