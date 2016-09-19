@@ -201,7 +201,7 @@ namespace DriveBike
                             foreach (Match tovar in podTovars)
                             {
                                 string tv = tovar.ToString();
-                                if (tv.Contains("<td>"))
+                                if (tv.Contains("  <td>"))
                                 {
                                     string name = new Regex("(?<=<td>).*(?=</td>)").Match(tv).ToString().Replace("[", "").Replace("]", "");
                                     string pricePodtovar = new Regex("(?<=span class=\"price\">).*(?= р.</span)").Match(tv).ToString();
@@ -1291,7 +1291,7 @@ namespace DriveBike
         private string ReturnPrice(string price)
         {
             price = price.Replace("р.", "").Trim();
-            price = price.Replace("1 ", "1").Replace("2 ", "2").Replace("3 ", "3").Replace("4 ", "4").Replace("5 ", "5").Replace("6 ", "6").Replace("7 ", "7").Replace("8 ", "8").Replace("9 ", "9").Trim();
+            price = price.Replace("1 ", "1").Replace("2 ", "2").Replace("3 ", "3").Replace("4 ", "4").Replace("5 ", "5").Replace("6 ", "6").Replace("7 ", "7").Replace("8 ", "8").Replace("9 ", "9").Replace("0 ", "0").Trim();
             return price;
         }
 
