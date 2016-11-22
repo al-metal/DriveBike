@@ -41,6 +41,8 @@
             this.btnSaveTemplate = new System.Windows.Forms.Button();
             this.btnActualCategory = new System.Windows.Forms.Button();
             this.btnUpdateImages = new System.Windows.Forms.Button();
+            this.tbLogin = new System.Windows.Forms.TextBox();
+            this.tbPassword = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // rtbMiniText
@@ -155,11 +157,27 @@
             this.btnUpdateImages.UseVisualStyleBackColor = true;
             this.btnUpdateImages.Click += new System.EventHandler(this.btnUpdateImages_Click);
             // 
+            // tbLogin
+            // 
+            this.tbLogin.Location = new System.Drawing.Point(704, 103);
+            this.tbLogin.Name = "tbLogin";
+            this.tbLogin.Size = new System.Drawing.Size(160, 20);
+            this.tbLogin.TabIndex = 13;
+            // 
+            // tbPassword
+            // 
+            this.tbPassword.Location = new System.Drawing.Point(704, 138);
+            this.tbPassword.Name = "tbPassword";
+            this.tbPassword.Size = new System.Drawing.Size(160, 20);
+            this.tbPassword.TabIndex = 14;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(876, 524);
+            this.Controls.Add(this.tbPassword);
+            this.Controls.Add(this.tbLogin);
             this.Controls.Add(this.btnUpdateImages);
             this.Controls.Add(this.btnActualCategory);
             this.Controls.Add(this.btnSaveTemplate);
@@ -196,6 +214,8 @@
         private System.Windows.Forms.Button btnSaveTemplate;
         private System.Windows.Forms.Button btnActualCategory;
         private System.Windows.Forms.Button btnUpdateImages;
+        private System.Windows.Forms.TextBox tbLogin;
+        private System.Windows.Forms.TextBox tbPassword;
     }
 }
 
