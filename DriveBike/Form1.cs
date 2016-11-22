@@ -196,12 +196,8 @@ namespace DriveBike
                     MatchCollection urlTovars = new Regex("(?<=<li class=\"item)[\\w\\W]*?(?=\" title=\")").Matches(otv);
 
                     if(urlTovars.Count == 60)
-                    {
-                        string pagesString = new Regex("(?<=<li class=\"current\">)[\\w\\W]*?(?=<a class=\"next i-next\" )").Match(otv).ToString();
-                        if (pagesString != "")
-                            pagesUrl = new Regex("(?<=><a href=\")[\\w\\W]*?(?=\">)").Matches(pagesString);
-                    }
-
+                        pagesUrl = countPagesTovars(otv);
+                        
                     if (availability.Count == urlTovars.Count)
                     {
                         for (int n = 0; urlTovars.Count > n; n++)
@@ -243,7 +239,6 @@ namespace DriveBike
                                         price = price.Remove(0, price.IndexOf(" ")).Trim();
                                     }
                                 }
-
                             }
                             if (price.Contains("<span"))
                             {
@@ -295,7 +290,6 @@ namespace DriveBike
                             {
                                 //товара нету и следует его добавить
                                 string slug = chpu.vozvr(nameTovar);
-
                                 string razdel = "Запчасти и расходники => Расходники для японских, европейских, американских мотоциклов => " + section2;
                                 string miniTextTemplate = MinitextStr();
                                 string fullTextTemplate = FulltextStr();
@@ -365,7 +359,6 @@ namespace DriveBike
                         for (int t = 0; pagesUrl.Count > t; t++)
                         {
                             #region
-                            //-*-------------------------------------------------------------------------------------------------------------------------------------------
                             otv = webRequest.getRequest(pagesUrl[t].ToString());
 
                             availability = new Regex("(?<=<p class=\"availability).*?(?=</span></p>)").Matches(otv);
@@ -512,7 +505,6 @@ namespace DriveBike
                                 //Если разное кол-во ссылок на товар и наличия товара
                             }
                             #endregion
-                            //--------------------------------------------------------------------------------------------------------------------------------------------------
                         }
                     }
 
@@ -1674,6 +1666,16 @@ namespace DriveBike
                 }
             }
             MessageBox.Show("Обновлено товаров на сайте");
+        }
+
+        private MatchCollection countPagesTovars(string otv)
+        {
+            MatchCollection pagesUrl = null;
+            string pagesString = new Regex("(?<=<li class=\"current\">)[\\w\\W]*?(?=<a class=\"next i-next\" )").Match(otv).ToString();
+            if (pagesString != "")
+                pagesUrl = new Regex("(?<=><a href=\")[\\w\\W]*?(?=\">)").Matches(pagesString);
+
+            return pagesUrl;
         }
 
         private void SaveProductInCSV(List<string> newProduct, string articl, string nameTovar, int priceActual, string razdel, string miniTextTemplate, string fullTextTemplate, string titleText, string descriptionText, string keywordsText, string slug)
