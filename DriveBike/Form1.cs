@@ -175,7 +175,6 @@ namespace DriveBike
             #region
             List<string> newProduct = newList();
 
-
             otv = webRequest.getRequest("http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla?limit=60");
             MatchCollection categoriesUrls = new Regex("(?<=<li class=\"amshopby-cat amshopby-cat-level-1\">)[\\w\\W]*?(?=</li>)").Matches(otv);
 
@@ -2227,4 +2226,4 @@ namespace DriveBike
             return otvSave;
         }
     }
-}
+} // 2230 строк

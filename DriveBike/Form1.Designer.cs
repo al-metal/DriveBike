@@ -170,6 +170,7 @@
             this.tbPassword.Name = "tbPassword";
             this.tbPassword.Size = new System.Drawing.Size(160, 20);
             this.tbPassword.TabIndex = 14;
+            this.tbPassword.UseSystemPasswordChar = true;
             // 
             // Form1
             // 
