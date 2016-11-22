@@ -70,7 +70,7 @@ namespace Bike18
                     reklama = "&markers[1]=1";
                 }
 
-                otv = webRequest.PostRequest(cookie, "http://bike18.nethouse.ru/api/catalog/getproduct?id=" + productId);
+                otv = webRequest.PostRequest(cookie, "https://bike18.nethouse.ru/api/catalog/getproduct?id=" + productId);
                 string slug = new Regex("(?<=\",\"slug\":\").*?(?=\")").Match(otv).ToString();
                 string balance = new Regex("(?<=,\"balance\":\").*?(?=\",\")").Match(otv).ToString();
                 string productCastomGroup = new Regex("(?<=productCustomGroup\":).*?(?=,\")").Match(otv).ToString();
@@ -122,7 +122,7 @@ namespace Bike18
                     }
                 }
 
-                otv = webRequest.PostRequest(cookie, "http://bike18.nethouse.ru/api/catalog/productmedia?id=" + productId);
+                otv = webRequest.PostRequest(cookie, "https://bike18.nethouse.ru/api/catalog/productmedia?id=" + productId);
                 string avatarId = new Regex("(?<=\"id\":\").*?(?=\")").Match(otv).Value;
                 string objektId = new Regex("(?<=\"objectId\":\").*?(?=\")").Match(otv).Value;
                 string timestamp = new Regex("(?<=\"timestamp\":\").*?(?=\")").Match(otv).Value;
@@ -254,7 +254,7 @@ namespace Bike18
         public string SaveTovar(CookieContainer cookie, List<string> getProduct)
         {
             string otv = "";
-            HttpWebRequest req = (HttpWebRequest)HttpWebRequest.Create("http://bike18.nethouse.ru/api/catalog/saveproduct");
+            HttpWebRequest req = (HttpWebRequest)HttpWebRequest.Create("https://bike18.nethouse.ru/api/catalog/saveproduct");
             req.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
             req.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0";
             req.Method = "POST";
@@ -277,6 +277,7 @@ namespace Bike18
                 HttpWebResponse res1 = (HttpWebResponse)req.GetResponse();
                 StreamReader ressr1 = new StreamReader(res1.GetResponseStream());
                 otv = ressr1.ReadToEnd();
+                res1.Close();
             }
             catch
             {
@@ -334,6 +335,25 @@ namespace Bike18
                 }
             }
             return alsoBuy;
+        }
+
+        public string searchTovar(string name, string searchString)
+        {
+            string otv = null;
+            string urlTovarBike = null;
+
+            otv = webRequest.getRequest("http://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + searchString);
+            MatchCollection strUrlProd1 = new Regex("(?<=<a href=\").*(?=\"><div class=\"-relative item-image\")").Matches(otv);
+            for (int t = 0; strUrlProd1.Count > t; t++)
+            {
+                string nameProduct1 = new Regex("(?<=<a href=\\\"" + strUrlProd1[t].ToString() + "\" >).*?(?=</a>)").Match(otv).ToString().Replace("&amp;quot;", "").Replace("&#039;", "'").Replace("&amp;gt;", ">").Replace("  ", " ").Trim();
+                if (name == nameProduct1)
+                {
+                    urlTovarBike = strUrlProd1[t].ToString();
+                    break;
+                }
+            }
+            return urlTovarBike;
         }
 
         #region Загрузка картинки товара на сайта Bike18.ru
