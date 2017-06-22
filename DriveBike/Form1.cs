@@ -179,9 +179,8 @@ namespace DriveBike
             }
 
             File.Delete("naSite.csv");
-            File.Delete("noAvailability");
             nethouse.NewListUploadinBike18("naSite");
-            
+
             #endregion
 
             miniTextTemplate = MinitextStr();
@@ -195,449 +194,388 @@ namespace DriveBike
 
             for (int i = 0; categoriesUrls.Count > i; i++)
             {
-                string categories = categories = new Regex("(?<=<a href=\").*?(?=\">)").Match(categoriesUrls[i].ToString()).ToString();
-                if (categories != "http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla/motornoye-maslo-i-smazki")
+                string categories = new Regex("(?<=<a href=\").*?(?=\">)").Match(categoriesUrls[i].ToString()).ToString();
+                if (categories == "http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla/motornoye-maslo-i-smazki")
+                    continue;
+
+                string section1 = "Расходники для японских, европейских, американских мотоциклов";
+                string section2 = new Regex("(?<=\">).*?(?=</a>)").Match(categoriesUrls[i].ToString()).ToString();
+
+                otv = httpRequest.getRequest(categories + "?limit=60");
+
+                string allPagesText = new Regex("(?<=<ol>)[\\w\\W]*?(?=</ol>)").Match(otv).ToString();
+                MatchCollection pagesUrl = new Regex("(?<=<a href=\").*?(?=\">)").Matches(allPagesText);
+                int countPages = pagesUrl.Count;
+                int pages = 0;
+
+                do
                 {
-                    string section1 = "Расходники для японских, европейских, американских мотоциклов";
-                    string section2 = new Regex("(?<=\">).*?(?=</a>)").Match(categoriesUrls[i].ToString()).ToString();
-
-                    otv = httpRequest.getRequest(categories + "?limit=60");
-
-                    string allPagesText = new Regex("(?<=<ol>)[\\w\\W]*?(?=</ol>)").Match(otv).ToString();
-                    MatchCollection pagesUrl = new Regex("(?<=<a href=\").*?(?=\">)").Matches(allPagesText);
-                    int countPages = pagesUrl.Count;
-                    int pages = 0;
-
-                    do
+                    pages++;
+                    if (pages != 1)
                     {
-                        pages++;
-                        if (pages != 1)
+                        otv = httpRequest.getRequest(pagesUrl[pages].ToString());
+                    }
+
+                    MatchCollection cartTovars = new Regex("(?<=<div class=\"item col-lg-3 col-md-4 col-sm-4 respl-item\">)[\\w\\W]*?(?=<!-- QUICKVIEW -->)").Matches(otv);
+                    foreach (Match str in cartTovars)
+                    {
+                        string cartTovar = str.ToString();
+                        string urlTovar = new Regex("(?<=<div class=\"item-title\">)[\\w\\W]*?(?=\" title=\")").Match(cartTovar).ToString().Trim();
+                        urlTovar = urlTovar.Replace("<a href=\"", "");
+                        bool buyTovar = cartTovar.Contains("<span>Купить</span>");
+
+                        if (!buyTovar)
+                            continue;
+
+                        string otvTovar = httpRequest.getRequest(urlTovar);
+
+                        List<string> tovarDB = getTovarDB(otvTovar, section1, section2);
+
+                        string resultSearch = SearchTovar(tovarDB);
+                        if (resultSearch == null || resultSearch == "")
                         {
-                            otv = httpRequest.getRequest(pagesUrl[pages].ToString());
+                            WriteTovarInCSV(tovarDB);
                         }
-
-                        MatchCollection cartTovars = new Regex("(?<=<div class=\"item col-lg-3 col-md-4 col-sm-4 respl-item\">)[\\w\\W]*?(?=<!-- QUICKVIEW -->)").Matches(otv);
-                        foreach (Match str in cartTovars)
-                        {
-                            string cartTovar = str.ToString();
-                            string urlTovar = new Regex("(?<=<div class=\"item-title\">)[\\w\\W]*?(?=\" title=\")").Match(cartTovar).ToString().Trim();
-                            urlTovar = urlTovar.Replace("<a href=\"", "");
-                            bool buyTovar = cartTovar.Contains("<span>Купить</span>");
-
-                            if (!buyTovar)
-                                continue;
-
-                            //urlTovar = "https://www.drivebike.ru/grp-99320-vilochnoe-maslo-bel-ray-high-performance-fork-oil";
-
-                            string otvTovar = httpRequest.getRequest(urlTovar);
-
-                            List<string> tovarDB = getTovarDB(otvTovar, section1, section2);
-
-                            string resultSearch = SearchTovar(tovarDB);
-                            if (resultSearch == null || resultSearch == "")
-                            {
-                                WriteTovarInCSV(tovarDB);
-                            }
-                            else
-                            {/*
+                        else
+                        {/*
                                 string[] allUrls = resultSearch.Split(';');
                                 foreach (string urlSearch in allUrls)
                                 {
                                     if (urlSearch != "")
                                         UpdatePrice(cookieNethouse, urlSearch, tovarMotoPiter);
                                 }*/
-                            }
+                        }
+                    }
+                } while (pages < countPages);
 
+                #region старый код
+                /*
 
+                MatchCollection availability = new Regex("(?<=<p class=\"availability).*?(?=</span></p>)").Matches(otv);
+                MatchCollection urlTovars = new Regex("(?<=<li class=\"item)[\\w\\W]*?(?=\" title=\")").Matches(otv);
+
+                if (urlTovars.Count == 60)
+                    pagesUrl = countPagesTovars(otv);
+
+                if (availability.Count == urlTovars.Count)
+                {
+                    for (int n = 0; urlTovars.Count > n; n++)
+                    {
+                        string availabilityTovar = availability[n].ToString();
+                        string url = new Regex("(?<=a href=\").*").Match(urlTovars[n].ToString()).ToString();
+
+                        otv = httpRequest.getRequest(url);
+
+                        string urlImageProduct = new Regex("(?<=<img src=\")http://www.drivebike.ru/media/catalog/product/.*?(?=\" />)").Match(otv).ToString();
+                        string articl = new Regex("(?<=<div class=\"std\">Код товара:).*?(?=<br /> )").Match(otv).ToString().Trim();
+                        try
+                        {
+                            webClient.DownloadFile(urlImageProduct, "Pic\\" + articl + ".jpg");
+                        }
+                        catch
+                        {
 
                         }
+                        string nameTovar = new Regex("(?<=<h1><font style=\"color:#459B06; \">).*(?=</h1>)").Match(otv).ToString();
+                        nameTovar = nameTovar.Replace("</font><br/>", " ");
 
-                        //List<string> productDB = GetproductDB()
-
-                    } while (pages < countPages);
-
-
-
-                    MatchCollection availability = new Regex("(?<=<p class=\"availability).*?(?=</span></p>)").Matches(otv);
-                    MatchCollection urlTovars = new Regex("(?<=<li class=\"item)[\\w\\W]*?(?=\" title=\")").Matches(otv);
-
-                    if (urlTovars.Count == 60)
-                        pagesUrl = countPagesTovars(otv);
-
-                    if (availability.Count == urlTovars.Count)
-                    {
-                        for (int n = 0; urlTovars.Count > n; n++)
+                        string analogs = "Данный товар имеет схожие позиции <br />";
+                        string number = new Regex("(?<=<br /> Номер по каталогу: ).*?(?=<br />)").Match(otv).ToString();
+                        string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otv).ToString();
+                        if (price == "")
                         {
-                            string availabilityTovar = availability[n].ToString();
-                            string url = new Regex("(?<=a href=\").*").Match(urlTovars[n].ToString()).ToString();
-
-                            otv = httpRequest.getRequest(url);
-
-                            string urlImageProduct = new Regex("(?<=<img src=\")http://www.drivebike.ru/media/catalog/product/.*?(?=\" />)").Match(otv).ToString();
-                            string articl = new Regex("(?<=<div class=\"std\">Код товара:).*?(?=<br /> )").Match(otv).ToString().Trim();
-                            try
+                            #region Получение каких то данных
+                            MatchCollection namesPodTovar = new Regex("(?<=<td>)[\\w\\W]*?(?=<td class=\"a-right\">)").Matches(otv);
+                            MatchCollection pricesPodTovar = new Regex("(?<=<span class=\"price\">).*?(?=</span>)").Matches(otv);
+                            if (pricesPodTovar.Count == 0)
+                                pricesPodTovar = new Regex("(?<=<span class=\"price-label\">Без скидки:</span>)[\\w\\W]*?(?=</span>)").Matches(otv);
+                            MatchCollection availabilitysTovar = new Regex("(?<=<td class=\"a-center\">)[\\w\\W]*?(?=</td>)").Matches(otv);
+                            for (int a = 0; pricesPodTovar.Count > a; a++)
                             {
-                                webClient.DownloadFile(urlImageProduct, "Pic\\" + articl + ".jpg");
-                            }
-                            catch
-                            {
-
-                            }
-                            string nameTovar = new Regex("(?<=<h1><font style=\"color:#459B06; \">).*(?=</h1>)").Match(otv).ToString();
-                            nameTovar = nameTovar.Replace("</font><br/>", " ");
-
-                            string analogs = "Данный товар имеет схожие позиции <br />";
-                            string number = new Regex("(?<=<br /> Номер по каталогу: ).*?(?=<br />)").Match(otv).ToString();
-                            string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otv).ToString();
-                            if (price == "")
-                            {
-                                #region Получение каких то данных
-                                MatchCollection namesPodTovar = new Regex("(?<=<td>)[\\w\\W]*?(?=<td class=\"a-right\">)").Matches(otv);
-                                MatchCollection pricesPodTovar = new Regex("(?<=<span class=\"price\">).*?(?=</span>)").Matches(otv);
-                                if (pricesPodTovar.Count == 0)
-                                    pricesPodTovar = new Regex("(?<=<span class=\"price-label\">Без скидки:</span>)[\\w\\W]*?(?=</span>)").Matches(otv);
-                                MatchCollection availabilitysTovar = new Regex("(?<=<td class=\"a-center\">)[\\w\\W]*?(?=</td>)").Matches(otv);
-                                for (int a = 0; pricesPodTovar.Count > a; a++)
+                                price = pricesPodTovar[a].ToString();
+                                if (price.Contains("<span"))
                                 {
-                                    price = pricesPodTovar[a].ToString();
-                                    if (price.Contains("<span"))
-                                    {
-                                        price = new Regex("(?<=<span class=\"price\" id=\"old-price-)[\\w\\W]*(?= р. )").Match(price).ToString();
-                                        price = price.Remove(0, price.IndexOf(" ")).Trim();
-                                    }
+                                    price = new Regex("(?<=<span class=\"price\" id=\"old-price-)[\\w\\W]*(?= р. )").Match(price).ToString();
+                                    price = price.Remove(0, price.IndexOf(" ")).Trim();
                                 }
-                                #endregion
                             }
-
-                            #region Получение еще данных о товаре
-                            if (price.Contains("<span"))
-                            {
-                                price = new Regex("(?<=<span class=\"price\" id=\"old-price-19517\">)[\\w\\W]*").Match(price).ToString();
-                                price = price.Trim();
-                            }
-                            price = price.Replace("р.", "").Trim();
-                            price = price.Replace("1 ", "1").Replace("2 ", "2").Replace("3 ", "3").Replace("4 ", "4").Replace("5 ", "5").Replace("6 ", "6").Replace("7 ", "7").Replace("8 ", "8").Replace("9 ", "9").Trim();
-
-                            MatchCollection Text = new Regex("(?<=<div class=\"std\">)[\\w\\W]*?(?=</div>)").Matches(otv);
-                            string table = new Regex("<table[\\w\\W]*?</table>").Match(otv).ToString().Replace("\n        ", "").Replace("            ", " ").Replace("  ", " ").Replace("    ", " ").Replace("        ", " ").Replace("  ", "").Replace("\n", "").Replace(" class=\"data\"", "").Replace(" class=\"label\"", "").Replace(" class=\"data-table\" id=\"product-attribute-specs-table\"><col width=\"25%\" /><col /", "");
-                            string miniText = Text[0].ToString() + analogs;
-                            string fullText = Text[1].ToString().Replace("\n", "") + "<br /> " + table;
-                            int priceActual = webRequest.price(Convert.ToInt32(price), discounts);
-
-                            string searchTovar = nethouse.searchTovar(nameTovar, articl);
-                            if (searchTovar == null)
-                                searchTovar = nethouse.searchTovar(nameTovar, nameTovar);
                             #endregion
+                        }
 
-                            if (searchTovar != "")
+                        #region Получение еще данных о товаре
+                        if (price.Contains("<span"))
+                        {
+                            price = new Regex("(?<=<span class=\"price\" id=\"old-price-19517\">)[\\w\\W]*").Match(price).ToString();
+                            price = price.Trim();
+                        }
+                        price = price.Replace("р.", "").Trim();
+                        price = price.Replace("1 ", "1").Replace("2 ", "2").Replace("3 ", "3").Replace("4 ", "4").Replace("5 ", "5").Replace("6 ", "6").Replace("7 ", "7").Replace("8 ", "8").Replace("9 ", "9").Trim();
+
+                        MatchCollection Text = new Regex("(?<=<div class=\"std\">)[\\w\\W]*?(?=</div>)").Matches(otv);
+                        string table = new Regex("<table[\\w\\W]*?</table>").Match(otv).ToString().Replace("\n        ", "").Replace("            ", " ").Replace("  ", " ").Replace("    ", " ").Replace("        ", " ").Replace("  ", "").Replace("\n", "").Replace(" class=\"data\"", "").Replace(" class=\"label\"", "").Replace(" class=\"data-table\" id=\"product-attribute-specs-table\"><col width=\"25%\" /><col /", "");
+                        string miniText = Text[0].ToString() + analogs;
+                        string fullText = Text[1].ToString().Replace("\n", "") + "<br /> " + table;
+                        int priceActual = webRequest.price(Convert.ToInt32(price), discounts);
+
+                        string searchTovar = nethouse.searchTovar(nameTovar, articl);
+                        if (searchTovar == null)
+                            searchTovar = nethouse.searchTovar(nameTovar, nameTovar);
+                        #endregion
+
+                        if (searchTovar != "")
+                        {
+                            #region Обработка товара если его нету в наличии
+                            //товар найден и надо обновить цену
+                            bool b = false;
+                            List<string> listProd = nethouse.GetProductList(cookie, searchTovar);
+                            int priceBike = Convert.ToInt32(listProd[9].ToString());
+
+                            if (listProd[43] == "0")
                             {
-                                #region Обработка товара если его нету в наличии
-                                //товар найден и надо обновить цену
-                                bool b = false;
-                                List<string> listProd = nethouse.GetProductList(cookie, searchTovar);
-                                int priceBike = Convert.ToInt32(listProd[9].ToString());
-
-                                if (listProd[43] == "0")
-                                {
-                                    listProd[43] = "100";
-                                    b = true;
-                                }
-
-                                if (!availabilityTovar.Contains("Есть в наличии"))
-                                {
-                                    listProd[43] = "0";
-                                    b = true;
-                                }
-
-                                if (priceBike != priceActual)
-                                {
-                                    listProd[9] = priceActual.ToString();
-                                    b = true;
-                                }
-
-                                if (b)
-                                    nethouse.SaveTovar(cookie, listProd);
-                                #endregion
-                            }
-                            else
-                            {
-                                #region формирование файла для загрузки на сайт
-                                //товара нету и следует его добавить
-                                string slug = chpu.vozvr(nameTovar);
-                                string razdel = "Запчасти и расходники => Расходники для японских, европейских, американских мотоциклов => " + section2;
-                                string miniTextTemplate = MinitextStr();
-                                string fullTextTemplate = FulltextStr();
-                                string titleText = tbTitle.Lines[0].ToString();
-                                string descriptionText = tbDescription.Lines[0].ToString();
-                                string keywordsText = tbKeywords.Lines[0].ToString();
-
-                                string dblProduct = "НАЗВАНИЕ также подходит для: аналогичных моделей.";
-                                /*
-                                miniTextTemplate = Replace(miniTextTemplate, section2, section1, dblProduct, nameTovar, articl, miniText, fullText);
-                                miniTextTemplate = miniTextTemplate.Replace(" class=\"label\"", "").Replace(" class=\"data\"", "");
-                                miniTextTemplate = miniTextTemplate.Remove(miniTextTemplate.LastIndexOf("<p>"));
-
-                                fullTextTemplate = Replace(fullTextTemplate, section2, section1, dblProduct, nameTovar, articl, miniText, fullText);
-                                fullTextTemplate = fullTextTemplate.Remove(fullTextTemplate.LastIndexOf("<p>"));
-                                fullTextTemplate = fullTextTemplate.Remove(fullTextTemplate.LastIndexOf("<p>"));
-
-                                titleText = ReplaceSEO(titleText, nameTovar, section1, section2, articl, dblProduct, number);
-                                descriptionText = ReplaceSEO(descriptionText, nameTovar, section1, section2, articl, dblProduct, number);
-                                keywordsText = ReplaceSEO(keywordsText, nameTovar, section1, section2, articl, dblProduct, number);
-
-                                titleText = Remove(titleText, 255);
-                                descriptionText = Remove(descriptionText, 200);
-                                keywordsText = Remove(keywordsText, 100);
-                                slug = Remove(slug, 64);
-
-                                newProduct = new List<string>();
-                                newProduct.Add(""); //id
-                                newProduct.Add("\"" + articl + "\""); //артикул
-                                newProduct.Add("\"" + nameTovar + "\"");  //название
-                                newProduct.Add("\"" + priceActual + "\""); //стоимость
-                                newProduct.Add("\"" + "" + "\""); //со скидкой
-                                newProduct.Add("\"" + razdel + "\""); //раздел товара
-                                newProduct.Add("\"" + "100" + "\""); //в наличии
-                                newProduct.Add("\"" + "0" + "\"");//поставка
-                                newProduct.Add("\"" + "1" + "\"");//срок поставки
-                                newProduct.Add("\"" + miniTextTemplate + "\"");//краткий текст
-                                newProduct.Add("\"" + fullTextTemplate + "\"");//полностью текст
-                                newProduct.Add("\"" + titleText + "\""); //заголовок страницы
-                                newProduct.Add("\"" + descriptionText + "\""); //описание
-                                newProduct.Add("\"" + keywordsText + "\"");//ключевые слова
-                                newProduct.Add("\"" + slug + "\""); //ЧПУ
-                                newProduct.Add(""); //с этим товаром покупают
-                                newProduct.Add("");   //рекламные метки
-                                newProduct.Add("\"" + "1" + "\"");  //показывать
-                                newProduct.Add("\"" + "0" + "\""); //удалить
-
-                                files.fileWriterCSV(newProduct, "naSite");*/
-                                #endregion
+                                listProd[43] = "100";
+                                b = true;
                             }
 
                             if (!availabilityTovar.Contains("Есть в наличии"))
                             {
-                                //Если товара нет в наличии добавить и пометить ссылкой нет в наличии    
-                                StreamWriter write = new StreamWriter("noAvailability", true);
-                                write.WriteLine(articl + ";" + nameTovar);
-                                write.Close();
+                                listProd[43] = "0";
+                                b = true;
                             }
+
+                            if (priceBike != priceActual)
+                            {
+                                listProd[9] = priceActual.ToString();
+                                b = true;
+                            }
+
+                            if (b)
+                                nethouse.SaveTovar(cookie, listProd);
+                            #endregion
+                        }
+                        else
+                        {
+                            #region формирование файла для загрузки на сайт
+                            //товара нету и следует его добавить
+                            string slug = chpu.vozvr(nameTovar);
+                            string razdel = "Запчасти и расходники => Расходники для японских, европейских, американских мотоциклов => " + section2;
+                            string miniTextTemplate = MinitextStr();
+                            string fullTextTemplate = FulltextStr();
+                            string titleText = tbTitle.Lines[0].ToString();
+                            string descriptionText = tbDescription.Lines[0].ToString();
+                            string keywordsText = tbKeywords.Lines[0].ToString();
+
+                            string dblProduct = "НАЗВАНИЕ также подходит для: аналогичных моделей.";
+                            /*
+                            miniTextTemplate = Replace(miniTextTemplate, section2, section1, dblProduct, nameTovar, articl, miniText, fullText);
+                            miniTextTemplate = miniTextTemplate.Replace(" class=\"label\"", "").Replace(" class=\"data\"", "");
+                            miniTextTemplate = miniTextTemplate.Remove(miniTextTemplate.LastIndexOf("<p>"));
+
+                            fullTextTemplate = Replace(fullTextTemplate, section2, section1, dblProduct, nameTovar, articl, miniText, fullText);
+                            fullTextTemplate = fullTextTemplate.Remove(fullTextTemplate.LastIndexOf("<p>"));
+                            fullTextTemplate = fullTextTemplate.Remove(fullTextTemplate.LastIndexOf("<p>"));
+
+                            titleText = ReplaceSEO(titleText, nameTovar, section1, section2, articl, dblProduct, number);
+                            descriptionText = ReplaceSEO(descriptionText, nameTovar, section1, section2, articl, dblProduct, number);
+                            keywordsText = ReplaceSEO(keywordsText, nameTovar, section1, section2, articl, dblProduct, number);
+
+                            titleText = Remove(titleText, 255);
+                            descriptionText = Remove(descriptionText, 200);
+                            keywordsText = Remove(keywordsText, 100);
+                            slug = Remove(slug, 64);
+
+                            newProduct = new List<string>();
+                            newProduct.Add(""); //id
+                            newProduct.Add("\"" + articl + "\""); //артикул
+                            newProduct.Add("\"" + nameTovar + "\"");  //название
+                            newProduct.Add("\"" + priceActual + "\""); //стоимость
+                            newProduct.Add("\"" + "" + "\""); //со скидкой
+                            newProduct.Add("\"" + razdel + "\""); //раздел товара
+                            newProduct.Add("\"" + "100" + "\""); //в наличии
+                            newProduct.Add("\"" + "0" + "\"");//поставка
+                            newProduct.Add("\"" + "1" + "\"");//срок поставки
+                            newProduct.Add("\"" + miniTextTemplate + "\"");//краткий текст
+                            newProduct.Add("\"" + fullTextTemplate + "\"");//полностью текст
+                            newProduct.Add("\"" + titleText + "\""); //заголовок страницы
+                            newProduct.Add("\"" + descriptionText + "\""); //описание
+                            newProduct.Add("\"" + keywordsText + "\"");//ключевые слова
+                            newProduct.Add("\"" + slug + "\""); //ЧПУ
+                            newProduct.Add(""); //с этим товаром покупают
+                            newProduct.Add("");   //рекламные метки
+                            newProduct.Add("\"" + "1" + "\"");  //показывать
+                            newProduct.Add("\"" + "0" + "\""); //удалить
+
+                            files.fileWriterCSV(newProduct, "naSite");
+                            #endregion
+                        }
+
+                        if (!availabilityTovar.Contains("Есть в наличии"))
+                        {
+                            //Если товара нет в наличии добавить и пометить ссылкой нет в наличии    
+                            StreamWriter write = new StreamWriter("noAvailability", true);
+                            write.WriteLine(articl + ";" + nameTovar);
+                            write.Close();
                         }
                     }
-                    else
-                    {
-                        //Если разное кол-во ссылок на товар и наличия товара
-                    }
+                }
+                else
+                {
+                    //Если разное кол-во ссылок на товар и наличия товара
+                }
 
-                    if (pagesUrl != null)
+                if (pagesUrl != null)
+                {
+                    for (int t = 0; pagesUrl.Count > t; t++)
                     {
-                        for (int t = 0; pagesUrl.Count > t; t++)
+                        #region
+                        otv = webRequest.getRequest(pagesUrl[t].ToString());
+
+                        availability = new Regex("(?<=<p class=\"availability).*?(?=</span></p>)").Matches(otv);
+                        urlTovars = new Regex("(?<=<li class=\"item)[\\w\\W]*?(?=\" title=\")").Matches(otv);
+                        if (availability.Count == urlTovars.Count)
                         {
-                            #region
-                            otv = webRequest.getRequest(pagesUrl[t].ToString());
-
-                            availability = new Regex("(?<=<p class=\"availability).*?(?=</span></p>)").Matches(otv);
-                            urlTovars = new Regex("(?<=<li class=\"item)[\\w\\W]*?(?=\" title=\")").Matches(otv);
-                            if (availability.Count == urlTovars.Count)
+                            for (int n = 0; urlTovars.Count > n; n++)
                             {
-                                for (int n = 0; urlTovars.Count > n; n++)
+                                string availabilityTovar = availability[n].ToString();
+                                string url = new Regex("(?<=a href=\").*").Match(urlTovars[n].ToString()).ToString();
+                                otv = webRequest.getRequest(url);
+                                string urlImageProduct = new Regex("(?<=<img src=\")http://www.drivebike.ru/media/catalog/product/.*?(?=\" />)").Match(otv).ToString();
+                                string articl = new Regex("(?<=<div class=\"std\">Код товара:).*?(?=<br /> )").Match(otv).ToString().Trim();
+                                try
                                 {
-                                    string availabilityTovar = availability[n].ToString();
-                                    string url = new Regex("(?<=a href=\").*").Match(urlTovars[n].ToString()).ToString();
-                                    otv = webRequest.getRequest(url);
-                                    string urlImageProduct = new Regex("(?<=<img src=\")http://www.drivebike.ru/media/catalog/product/.*?(?=\" />)").Match(otv).ToString();
-                                    string articl = new Regex("(?<=<div class=\"std\">Код товара:).*?(?=<br /> )").Match(otv).ToString().Trim();
-                                    try
+                                    webClient.DownloadFile(urlImageProduct, "pic\\" + articl + ".jpg");
+                                }
+                                catch
+                                {
+
+                                }
+                                string nameTovar = new Regex("(?<=<h1><font style=\"color:#459B06; \">).*(?=</h1>)").Match(otv).ToString();
+                                nameTovar = nameTovar.Replace("</font><br/>", " ");
+
+                                string number = new Regex("(?<=<br /> Номер по каталогу: ).*?(?=<br />)").Match(otv).ToString();
+                                string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otv).ToString();
+                                MatchCollection Text = new Regex("(?<=<div class=\"std\">)[\\w\\W]*?(?=</div>)").Matches(otv);
+                                string table = new Regex("<table[\\w\\W]*?</table>").Match(otv).ToString().Replace("\n        ", "").Replace("            ", " ").Replace("  ", " ").Replace("    ", " ").Replace("        ", " ").Replace("  ", "").Replace("\n", "").Replace(" class=\"data\"", "").Replace(" class=\"label\"", "").Replace(" class=\"data-table\" id=\"product-attribute-specs-table\"><col width=\"25%\" /><col /", "");
+                                string miniText = Text[0].ToString();
+                                string fullText = Text[1].ToString().Replace("\n", "") + "<br /> " + table;
+                                int priceActual = webRequest.price(Convert.ToInt32(price), discounts);
+
+                                string searchTovar = nethouse.searchTovar(nameTovar, articl);
+                                if (searchTovar == null)
+                                    searchTovar = nethouse.searchTovar(nameTovar, nameTovar);
+
+                                if (searchTovar != "")
+                                {
+                                    //товар найден и надо обновить цену
+                                    bool b = false;
+                                    List<string> listProd = nethouse.GetProductList(cookie, searchTovar);
+                                    int priceBike = Convert.ToInt32(listProd[9].ToString());
+
+                                    if (listProd[43] == "0")
                                     {
-                                        webClient.DownloadFile(urlImageProduct, "pic\\" + articl + ".jpg");
-                                    }
-                                    catch
-                                    {
-
-                                    }
-                                    string nameTovar = new Regex("(?<=<h1><font style=\"color:#459B06; \">).*(?=</h1>)").Match(otv).ToString();
-                                    nameTovar = nameTovar.Replace("</font><br/>", " ");
-
-                                    string number = new Regex("(?<=<br /> Номер по каталогу: ).*?(?=<br />)").Match(otv).ToString();
-                                    string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otv).ToString();
-                                    MatchCollection Text = new Regex("(?<=<div class=\"std\">)[\\w\\W]*?(?=</div>)").Matches(otv);
-                                    string table = new Regex("<table[\\w\\W]*?</table>").Match(otv).ToString().Replace("\n        ", "").Replace("            ", " ").Replace("  ", " ").Replace("    ", " ").Replace("        ", " ").Replace("  ", "").Replace("\n", "").Replace(" class=\"data\"", "").Replace(" class=\"label\"", "").Replace(" class=\"data-table\" id=\"product-attribute-specs-table\"><col width=\"25%\" /><col /", "");
-                                    string miniText = Text[0].ToString();
-                                    string fullText = Text[1].ToString().Replace("\n", "") + "<br /> " + table;
-                                    int priceActual = webRequest.price(Convert.ToInt32(price), discounts);
-
-                                    string searchTovar = nethouse.searchTovar(nameTovar, articl);
-                                    if (searchTovar == null)
-                                        searchTovar = nethouse.searchTovar(nameTovar, nameTovar);
-
-                                    if (searchTovar != "")
-                                    {
-                                        //товар найден и надо обновить цену
-                                        bool b = false;
-                                        List<string> listProd = nethouse.GetProductList(cookie, searchTovar);
-                                        int priceBike = Convert.ToInt32(listProd[9].ToString());
-
-                                        if (listProd[43] == "0")
-                                        {
-                                            listProd[43] = "100";
-                                            b = true;
-                                        }
-
-                                        if (!availabilityTovar.Contains("Есть в наличии"))
-                                        {
-                                            listProd[43] = "0";
-                                            b = true;
-                                        }
-
-                                        if (priceBike != priceActual)
-                                        {
-                                            listProd[9] = priceActual.ToString();
-                                            b = true;
-                                        }
-
-                                        if (b)
-                                            nethouse.SaveTovar(cookie, listProd);
-                                    }
-                                    else
-                                    {
-                                        #region формирование файла для загрузки на сайт
-                                        //товара нету и следует его добавить
-                                        string slug = chpu.vozvr(nameTovar);
-                                        string razdel = "Запчасти и расходники => Расходники для японских, европейских, американских мотоциклов => " + section2;
-                                        string miniTextTemplate = MinitextStr();
-                                        string fullTextTemplate = FulltextStr();
-                                        string titleText = tbTitle.Lines[0].ToString();
-                                        string descriptionText = tbDescription.Lines[0].ToString();
-                                        string keywordsText = tbKeywords.Lines[0].ToString();
-
-                                        string dblProduct = "НАЗВАНИЕ также подходит для: аналогичных моделей.";
-                                        /*
-                                        miniTextTemplate = Replace(miniTextTemplate, section2, section1, dblProduct, nameTovar, articl, miniText, fullText);
-                                        miniTextTemplate = miniTextTemplate.Replace(" class=\"label\"", "").Replace(" class=\"data\"", "");
-                                        miniTextTemplate = miniTextTemplate.Remove(miniTextTemplate.LastIndexOf("<p>"));
-
-                                        fullTextTemplate = Replace(fullTextTemplate, section2, section1, dblProduct, nameTovar, articl, miniText, fullText);
-                                        fullTextTemplate = fullTextTemplate.Remove(fullTextTemplate.LastIndexOf("<p>"));
-                                        fullTextTemplate = fullTextTemplate.Remove(fullTextTemplate.LastIndexOf("<p>"));
-
-                                        titleText = ReplaceSEO(titleText, nameTovar, section1, section2, articl, dblProduct, number);
-                                        descriptionText = ReplaceSEO(descriptionText, nameTovar, section1, section2, articl, dblProduct, number);
-                                        keywordsText = ReplaceSEO(keywordsText, nameTovar, section1, section2, articl, dblProduct, number);
-
-                                        titleText = Remove(titleText, 255);
-                                        descriptionText = Remove(descriptionText, 200);
-                                        keywordsText = Remove(keywordsText, 100);
-                                        slug = Remove(slug, 64);
-
-                                        newProduct = new List<string>();
-                                        newProduct.Add(""); //id
-                                        newProduct.Add("\"" + articl + "\""); //артикул
-                                        newProduct.Add("\"" + nameTovar + "\"");  //название
-                                        newProduct.Add("\"" + priceActual + "\""); //стоимость
-                                        newProduct.Add("\"" + "" + "\""); //со скидкой
-                                        newProduct.Add("\"" + razdel + "\""); //раздел товара
-                                        newProduct.Add("\"" + "100" + "\""); //в наличии
-                                        newProduct.Add("\"" + "0" + "\"");//поставка
-                                        newProduct.Add("\"" + "1" + "\"");//срок поставки
-                                        newProduct.Add("\"" + miniTextTemplate + "\"");//краткий текст
-                                        newProduct.Add("\"" + fullTextTemplate + "\"");//полностью текст
-                                        newProduct.Add("\"" + titleText + "\""); //заголовок страницы
-                                        newProduct.Add("\"" + descriptionText + "\""); //описание
-                                        newProduct.Add("\"" + keywordsText + "\"");//ключевые слова
-                                        newProduct.Add("\"" + slug + "\""); //ЧПУ
-                                        newProduct.Add(""); //с этим товаром покупают
-                                        newProduct.Add("");   //рекламные метки
-                                        newProduct.Add("\"" + "1" + "\"");  //показывать
-                                        newProduct.Add("\"" + "0" + "\""); //удалить
-
-                                        files.fileWriterCSV(newProduct, "naSite");*/
-                                        #endregion
+                                        listProd[43] = "100";
+                                        b = true;
                                     }
 
                                     if (!availabilityTovar.Contains("Есть в наличии"))
                                     {
-                                        //Если товара нет в наличии добавить и пометить ссылкой нет в наличии    
-                                        StreamWriter write = new StreamWriter("noAvailability", true);
-                                        write.WriteLine(articl + ";" + nameTovar);
-                                        write.Close();
+                                        listProd[43] = "0";
+                                        b = true;
                                     }
+
+                                    if (priceBike != priceActual)
+                                    {
+                                        listProd[9] = priceActual.ToString();
+                                        b = true;
+                                    }
+
+                                    if (b)
+                                        nethouse.SaveTovar(cookie, listProd);
+                                }
+                                else
+                                {
+                                    #region формирование файла для загрузки на сайт
+                                    //товара нету и следует его добавить
+                                    string slug = chpu.vozvr(nameTovar);
+                                    string razdel = "Запчасти и расходники => Расходники для японских, европейских, американских мотоциклов => " + section2;
+                                    string miniTextTemplate = MinitextStr();
+                                    string fullTextTemplate = FulltextStr();
+                                    string titleText = tbTitle.Lines[0].ToString();
+                                    string descriptionText = tbDescription.Lines[0].ToString();
+                                    string keywordsText = tbKeywords.Lines[0].ToString();
+
+                                    string dblProduct = "НАЗВАНИЕ также подходит для: аналогичных моделей.";
+                                    /*
+                                    miniTextTemplate = Replace(miniTextTemplate, section2, section1, dblProduct, nameTovar, articl, miniText, fullText);
+                                    miniTextTemplate = miniTextTemplate.Replace(" class=\"label\"", "").Replace(" class=\"data\"", "");
+                                    miniTextTemplate = miniTextTemplate.Remove(miniTextTemplate.LastIndexOf("<p>"));
+
+                                    fullTextTemplate = Replace(fullTextTemplate, section2, section1, dblProduct, nameTovar, articl, miniText, fullText);
+                                    fullTextTemplate = fullTextTemplate.Remove(fullTextTemplate.LastIndexOf("<p>"));
+                                    fullTextTemplate = fullTextTemplate.Remove(fullTextTemplate.LastIndexOf("<p>"));
+
+                                    titleText = ReplaceSEO(titleText, nameTovar, section1, section2, articl, dblProduct, number);
+                                    descriptionText = ReplaceSEO(descriptionText, nameTovar, section1, section2, articl, dblProduct, number);
+                                    keywordsText = ReplaceSEO(keywordsText, nameTovar, section1, section2, articl, dblProduct, number);
+
+                                    titleText = Remove(titleText, 255);
+                                    descriptionText = Remove(descriptionText, 200);
+                                    keywordsText = Remove(keywordsText, 100);
+                                    slug = Remove(slug, 64);
+
+                                    newProduct = new List<string>();
+                                    newProduct.Add(""); //id
+                                    newProduct.Add("\"" + articl + "\""); //артикул
+                                    newProduct.Add("\"" + nameTovar + "\"");  //название
+                                    newProduct.Add("\"" + priceActual + "\""); //стоимость
+                                    newProduct.Add("\"" + "" + "\""); //со скидкой
+                                    newProduct.Add("\"" + razdel + "\""); //раздел товара
+                                    newProduct.Add("\"" + "100" + "\""); //в наличии
+                                    newProduct.Add("\"" + "0" + "\"");//поставка
+                                    newProduct.Add("\"" + "1" + "\"");//срок поставки
+                                    newProduct.Add("\"" + miniTextTemplate + "\"");//краткий текст
+                                    newProduct.Add("\"" + fullTextTemplate + "\"");//полностью текст
+                                    newProduct.Add("\"" + titleText + "\""); //заголовок страницы
+                                    newProduct.Add("\"" + descriptionText + "\""); //описание
+                                    newProduct.Add("\"" + keywordsText + "\"");//ключевые слова
+                                    newProduct.Add("\"" + slug + "\""); //ЧПУ
+                                    newProduct.Add(""); //с этим товаром покупают
+                                    newProduct.Add("");   //рекламные метки
+                                    newProduct.Add("\"" + "1" + "\"");  //показывать
+                                    newProduct.Add("\"" + "0" + "\""); //удалить
+
+                                    files.fileWriterCSV(newProduct, "naSite");
+                                    #endregion
+                                }
+
+                                if (!availabilityTovar.Contains("Есть в наличии"))
+                                {
+                                    //Если товара нет в наличии добавить и пометить ссылкой нет в наличии    
+                                    StreamWriter write = new StreamWriter("noAvailability", true);
+                                    write.WriteLine(articl + ";" + nameTovar);
+                                    write.Close();
                                 }
                             }
-                            else
-                            {
-                                //Если разное кол-во ссылок на товар и наличия товара
-                            }
-                            #endregion
                         }
-                    }
-
-
-                    //загружаем на сайт
-                    #region
-                    System.Threading.Thread.Sleep(20000);
-                    string[] naSite1 = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
-                    if (naSite1.Length > 1)
-                        nethouse.UploadCSVNethouse(cookie, "naSite.csv");
-                    #endregion
-
-                    //обновляем наличие товара
-                    #region
-
-                    System.Threading.Thread.Sleep(70000);
-                    if (File.Exists("noAvailability"))
-                    {
-                        string[] noAvailabilityArr = File.ReadAllLines("noAvailability");
-                        if (noAvailabilityArr.Length > 0)
+                        else
                         {
-                            for (int z = 0; noAvailabilityArr.Length > z; z++)
-                            {
-                                string[] str = noAvailabilityArr[z].Split(';');
-                                string articl = str[0];
-                                string name = str[1];
-
-                                bool b = false;
-                                otv = webRequest.getRequest("http://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + name);
-                                MatchCollection searchTovars = new Regex("(?<=\" >).*?(?=</a>)").Matches(otv);
-                                if (searchTovars.Count > 0)
-                                {
-                                    for (int m = 0; searchTovars.Count > m; m++)
-                                    {
-                                        string searchTovarName = searchTovars[m].ToString();
-                                        if (searchTovarName == name)
-                                        {
-                                            //товар найден
-                                            b = true;
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                if (b)
-                                {
-                                    //товар найден и надо обновить цену
-                                    string urlTovar = null;
-                                    MatchCollection searchTovarsBike = new Regex("(?<=<div class=\"product-link -text-center\"><a href=\").*?(?=\" >)").Matches(otv);
-                                    for (int m = 0; searchTovarsBike.Count > m; m++)
-                                    {
-                                        string searchNameTovar = new Regex("(?<=" + searchTovarsBike[m].ToString() + "\" >).*?(?=</a>)").Match(otv).ToString();
-                                        if (searchNameTovar == name)
-                                        {
-                                            urlTovar = searchTovarsBike[m].ToString();
-                                            List<string> listProd = webRequest.arraySaveimage(urlTovar);
-                                            listProd[43] = "0";
-
-                                            webRequest.saveTovar(listProd);
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
+                            //Если разное кол-во ссылок на товар и наличия товара
                         }
+                        #endregion
                     }
-
-                    #endregion
-                    //--
                 }
+                */
+#endregion
+
+                //загружаем на сайт
+                #region
+                System.Threading.Thread.Sleep(20000);
+                string[] naSite1 = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
+                //if (naSite1.Length > 1)
+                //    nethouse.UploadCSVNethouse(cookie, "naSite.csv");
+                File.Delete("naSite.csv");
+                nethouse.NewListUploadinBike18("naSite");
+                #endregion
+
             }
 
 
@@ -652,13 +590,60 @@ namespace DriveBike
 
             for (int i = 0; categoriesUrls.Count > i; i++)
             {
-                MatchCollection pagesUrl = null;
                 string categories = new Regex("(?<=<a href=\").*?(?=\">)").Match(categoriesUrls[i].ToString()).ToString();
 
                 string section1 = "Расходники для японских, европейских, американских мотоциклов";
                 string section2 = new Regex("(?<=\">).*?(?=</a>)").Match(categoriesUrls[i].ToString()).ToString();
-                otv = webRequest.getRequest(categories);
 
+                otv = httpRequest.getRequest(categories + "?limit=60");
+
+                string allPagesText = new Regex("(?<=<ol>)[\\w\\W]*?(?=</ol>)").Match(otv).ToString();
+                MatchCollection pagesUrl = new Regex("(?<=<a href=\").*?(?=\">)").Matches(allPagesText);
+                int countPages = pagesUrl.Count;
+                int pages = 0;
+
+                do
+                {
+                    pages++;
+                    if (pages != 1)
+                    {
+                        otv = httpRequest.getRequest(pagesUrl[pages].ToString());
+                    }
+
+                    MatchCollection cartTovars = new Regex("(?<=<div class=\"item col-lg-3 col-md-4 col-sm-4 respl-item\">)[\\w\\W]*?(?=<!-- QUICKVIEW -->)").Matches(otv);
+                    foreach (Match str in cartTovars)
+                    {
+                        string cartTovar = str.ToString();
+                        string urlTovar = new Regex("(?<=<div class=\"item-title\">)[\\w\\W]*?(?=\" title=\")").Match(cartTovar).ToString().Trim();
+                        urlTovar = urlTovar.Replace("<a href=\"", "");
+                        bool buyTovar = cartTovar.Contains("<span>Купить</span>");
+
+                        if (!buyTovar)
+                            continue;
+
+                        string otvTovar = httpRequest.getRequest(urlTovar);
+
+                        List<string> tovarDB = getTovarDB(otvTovar, section1, section2);
+
+                        string resultSearch = SearchTovar(tovarDB);
+                        if (resultSearch == null || resultSearch == "")
+                        {
+                            WriteTovarInCSV(tovarDB);
+                        }
+                        else
+                        {/*
+                                string[] allUrls = resultSearch.Split(';');
+                                foreach (string urlSearch in allUrls)
+                                {
+                                    if (urlSearch != "")
+                                        UpdatePrice(cookieNethouse, urlSearch, tovarMotoPiter);
+                                }*/
+                        }
+                    }
+                } while (pages < countPages);
+
+#region Старый код
+                /*
                 MatchCollection availability = new Regex("(?<=<p class=\"availability).*?(?=</span></p>)").Matches(otv);
                 MatchCollection urlTovars = new Regex("(?<=<li class=\"item)[\\w\\W]*?(?=\" title=\")").Matches(otv);
 
@@ -768,7 +753,7 @@ namespace DriveBike
                                         keywordsText = Remove(keywordsText, 100);
                                         slug = Remove(slug, 64);
 
-                                        SaveProductInCSV(newProduct, articl, name, priceActual, razdel, miniTextTemplate, fullTextTemplate, titleText, descriptionText, keywordsText, slug);*/
+                                        SaveProductInCSV(newProduct, articl, name, priceActual, razdel, miniTextTemplate, fullTextTemplate, titleText, descriptionText, keywordsText, slug);
                                     }
                                 }
                             }
@@ -838,7 +823,7 @@ namespace DriveBike
                                 keywordsText = Remove(keywordsText, 100);
                                 slug = Remove(slug, 64);
 
-                                SaveProductInCSV(newProduct, articl, nameTovar, priceActual, razdel, miniTextTemplate, fullTextTemplate, titleText, descriptionText, keywordsText, slug);*/
+                                SaveProductInCSV(newProduct, articl, nameTovar, priceActual, razdel, miniTextTemplate, fullTextTemplate, titleText, descriptionText, keywordsText, slug);
                             }
 
                             if (!availabilityTovar.Contains("Есть в наличии"))
@@ -968,7 +953,7 @@ namespace DriveBike
                                                 keywordsText = Remove(keywordsText, 100);
                                                 slug = Remove(slug, 64);
 
-                                                SaveProductInCSV(newProduct, articl, name, priceActual, razdel, miniTextTemplate, fullTextTemplate, titleText, descriptionText, keywordsText, slug);*/
+                                                SaveProductInCSV(newProduct, articl, name, priceActual, razdel, miniTextTemplate, fullTextTemplate, titleText, descriptionText, keywordsText, slug);
                                             }
 
                                             break;
@@ -1039,7 +1024,7 @@ namespace DriveBike
                                         keywordsText = Remove(keywordsText, 100);
                                         slug = Remove(slug, 64);
 
-                                        SaveProductInCSV(newProduct, articl, nameTovar, priceActual, razdel, miniTextTemplate, fullTextTemplate, titleText, descriptionText, keywordsText, slug);*/
+                                        SaveProductInCSV(newProduct, articl, nameTovar, priceActual, razdel, miniTextTemplate, fullTextTemplate, titleText, descriptionText, keywordsText, slug);
                                     }
 
                                     if (!availabilityTovar.Contains("Есть в наличии"))
@@ -1058,18 +1043,22 @@ namespace DriveBike
                         }
                         #endregion
                     }
-                }
+                }*/
+
+#endregion
                 //загружаем на сайт
                 #region
                 System.Threading.Thread.Sleep(20000);
                 string[] naSite1 = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
                 if (naSite1.Length > 1)
                     nethouse.UploadCSVNethouse(cookie, "naSite.csv");
+                File.Delete("naSite.csv");
+                nethouse.NewListUploadinBike18("naSite");
                 #endregion
 
                 //обновляем наличие товара
                 #region
-
+                /*
                 System.Threading.Thread.Sleep(70000);
                 if (File.Exists("noAvailability"))
                 {
@@ -1108,7 +1097,7 @@ namespace DriveBike
                         }
                     }
                 }
-
+                */
                 #endregion
                 File.Delete("noAvailability");
             }
@@ -1132,7 +1121,7 @@ namespace DriveBike
                 string article = articles[i];
                 string price = prices[i];
 
-                if (name == "" || article == "" || price =="")
+                if (name == "" || article == "" || price == "")
                     continue;
 
                 string slug = chpu.vozvr(name);
@@ -1174,7 +1163,7 @@ namespace DriveBike
             }
 
 
-            
+
 
             /*
             string slug = chpu.vozvr("123");
@@ -1271,9 +1260,9 @@ namespace DriveBike
             string codeCatalog = new Regex("(?<=Код товара: )[\\w\\W]*?(?=<br />)").Match(miniDescription).ToString();
             miniDescription = miniDescription.Replace(numberCatalog, "").Replace(codeCatalog, articl).Replace("'", "\"");
             MatchCollection ahref = new Regex("<a.*?</a>").Matches(miniDescription);
-            if(ahref.Count != 0)
+            if (ahref.Count != 0)
             {
-                foreach(Match str in ahref)
+                foreach (Match str in ahref)
                 {
                     string urls = str.ToString();
                     if (urls != "")
@@ -1319,8 +1308,8 @@ namespace DriveBike
                 foreach (Match str in atributes)
                 {
                     string urls = str.ToString();
-                    if(urls != "")
-                    fullDescriptionTable = fullDescriptionTable.Replace(urls, "");
+                    if (urls != "")
+                        fullDescriptionTable = fullDescriptionTable.Replace(urls, "");
                 }
             }
 
