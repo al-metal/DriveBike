@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Bike18
 {
-    class nethouse
+    class nethouse2
     {
         int addCount = 0;
 

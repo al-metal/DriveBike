@@ -1,19 +1,15 @@
-﻿using Bike18;
-using RacerMotors;
+﻿using RacerMotors;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using web;
 using Формирование_ЧПУ;
+using NehouseLibrary;
+using xNet.Net;
 
 namespace DriveBike
 {
@@ -23,7 +19,7 @@ namespace DriveBike
         CHPU chpu = new CHPU();
         WebClient webClient = new WebClient();
         nethouse nethouse = new nethouse();
-        httpRequest httpRequest = new httpRequest();
+       // httpRequest httpRequest2 = new httpRequest();
 
         int addCount = 0;
         string boldOpen = "<span style=\"\"font-weight: bold; font-weight: bold; \"\">";
@@ -170,7 +166,7 @@ namespace DriveBike
             Properties.Settings.Default.password = tbPassword.Text;
             Properties.Settings.Default.Save();
 
-            CookieContainer cookie = nethouse.CookieNethouse(tbLogin.Text, tbPassword.Text);
+            CookieDictionary cookie = nethouse.CookieNethouse(tbLogin.Text, tbPassword.Text);
 
             if (cookie.Count == 1)
             {
@@ -189,7 +185,7 @@ namespace DriveBike
             descriptionTextTemplate = tbDescription.Lines[0].ToString();
             keywordsTextTemplate = tbKeywords.Lines[0].ToString();
 
-            otv = httpRequest.getRequest("http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla");
+            otv = nethouse.getRequest("http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla");
             MatchCollection categoriesUrls = new Regex("(?<=<li class=\"amshopby-cat amshopby-cat-level-1\">)[\\w\\W]*?(?=</li>)").Matches(otv);
 
             for (int i = 0; categoriesUrls.Count > i; i++)
@@ -201,7 +197,7 @@ namespace DriveBike
                 string section1 = "Расходники для японских, европейских, американских мотоциклов";
                 string section2 = new Regex("(?<=\">).*?(?=</a>)").Match(categoriesUrls[i].ToString()).ToString();
 
-                otv = httpRequest.getRequest(categories + "?limit=60");
+                otv = nethouse.getRequest(categories + "?limit=60");
 
                 string allPagesText = new Regex("(?<=<ol>)[\\w\\W]*?(?=</ol>)").Match(otv).ToString();
                 MatchCollection pagesUrl = new Regex("(?<=<a href=\").*?(?=\">)").Matches(allPagesText);
@@ -213,7 +209,7 @@ namespace DriveBike
                     pages++;
                     if (pages != 1)
                     {
-                        otv = httpRequest.getRequest(pagesUrl[pages].ToString());
+                        otv = nethouse.getRequest(pagesUrl[pages].ToString());
                     }
 
                     MatchCollection cartTovars = new Regex("(?<=<div class=\"item col-lg-3 col-md-4 col-sm-4 respl-item\">)[\\w\\W]*?(?=<!-- QUICKVIEW -->)").Matches(otv);
@@ -227,7 +223,7 @@ namespace DriveBike
                         if (!buyTovar)
                             continue;
 
-                        string otvTovar = httpRequest.getRequest(urlTovar);
+                        string otvTovar = nethouse.getRequest(urlTovar);
 
                         List<string> tovarDB = getTovarDB(otvTovar, section1, section2);
 
@@ -595,7 +591,7 @@ namespace DriveBike
                 string section1 = "Расходники для японских, европейских, американских мотоциклов";
                 string section2 = new Regex("(?<=\">).*?(?=</a>)").Match(categoriesUrls[i].ToString()).ToString();
 
-                otv = httpRequest.getRequest(categories + "?limit=60");
+                otv = nethouse.getRequest(categories + "?limit=60");
 
                 string allPagesText = new Regex("(?<=<ol>)[\\w\\W]*?(?=</ol>)").Match(otv).ToString();
                 MatchCollection pagesUrl = new Regex("(?<=<a href=\").*?(?=\">)").Matches(allPagesText);
@@ -607,7 +603,7 @@ namespace DriveBike
                     pages++;
                     if (pages != 1)
                     {
-                        otv = httpRequest.getRequest(pagesUrl[pages].ToString());
+                        otv = nethouse.getRequest(pagesUrl[pages].ToString());
                     }
 
                     MatchCollection cartTovars = new Regex("(?<=<div class=\"item col-lg-3 col-md-4 col-sm-4 respl-item\">)[\\w\\W]*?(?=<!-- QUICKVIEW -->)").Matches(otv);
@@ -621,7 +617,7 @@ namespace DriveBike
                         if (!buyTovar)
                             continue;
 
-                        string otvTovar = httpRequest.getRequest(urlTovar);
+                        string otvTovar = nethouse.getRequest(urlTovar);
 
                         List<string> tovarDB = getTovarDB(otvTovar, section1, section2);
 
