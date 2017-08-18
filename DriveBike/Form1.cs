@@ -22,6 +22,7 @@ namespace DriveBike
        // httpRequest httpRequest2 = new httpRequest();
 
         int addCount = 0;
+        int editsProduct = 0;
         string boldOpen = "<span style=\"\"font-weight: bold; font-weight: bold; \"\">";
         string boldClose = "</span>";
         double discounts = 0.02;
@@ -185,6 +186,8 @@ namespace DriveBike
             descriptionTextTemplate = tbDescription.Lines[0].ToString();
             keywordsTextTemplate = tbKeywords.Lines[0].ToString();
 
+            editsProduct = 0;
+
             otv = nethouse.getRequest("http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla");
             MatchCollection categoriesUrls = new Regex("(?<=<li class=\"amshopby-cat amshopby-cat-level-1\">)[\\w\\W]*?(?=</li>)").Matches(otv);
 
@@ -206,7 +209,6 @@ namespace DriveBike
 
                 do
                 {
-                    pages++;
                     if (pages != 1)
                     {
                         otv = nethouse.getRequest(pagesUrl[pages].ToString());
@@ -233,16 +235,17 @@ namespace DriveBike
                             WriteTovarInCSV(tovarDB);
                         }
                         else
-                        {/*
+                        {
                                 string[] allUrls = resultSearch.Split(';');
                                 foreach (string urlSearch in allUrls)
                                 {
                                     if (urlSearch != "")
-                                        UpdatePrice(cookieNethouse, urlSearch, tovarMotoPiter);
-                                }*/
+                                        UpdatePrice(cookie, urlSearch, tovarDB);
+                                }
                         }
                     }
-                } while (pages < countPages);
+                    pages++;
+                } while (pages <= countPages);
 
                 #region старый код
                 /*
@@ -560,14 +563,14 @@ namespace DriveBike
                     }
                 }
                 */
-#endregion
+                #endregion
 
                 //загружаем на сайт
                 #region
                 System.Threading.Thread.Sleep(20000);
                 string[] naSite1 = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
-                //if (naSite1.Length > 1)
-                //    nethouse.UploadCSVNethouse(cookie, "naSite.csv");
+                if (naSite1.Length > 1)
+                    nethouse.UploadCSVNethouse(cookie, "naSite.csv");
                 File.Delete("naSite.csv");
                 nethouse.NewListUploadinBike18("naSite");
                 #endregion
@@ -1100,6 +1103,33 @@ namespace DriveBike
             MessageBox.Show("Обновлено товаров на сайте");
         }
 
+        private void UpdatePrice(CookieDictionary cookie, string urlSearch, List<string> tovarDB)
+        {
+            bool edits = false;
+            List<string> productB18 = new List<string>();
+            productB18 = nethouse.GetProductList(cookie, urlSearch);
+            if (productB18 == null)
+                return;
+
+            int priceDB = Convert.ToInt32(tovarDB[2]);
+            int priceB18 = Convert.ToInt32(productB18[9]);
+
+            if(priceB18 != priceDB)
+            {
+                productB18[9] = priceDB.ToString();
+                edits = true;
+            }
+
+            if (edits)
+            {
+                nethouse.SaveTovar(cookie, productB18);
+                editsProduct++;
+            }
+
+
+
+        }
+
         private void WriteTovarInCSV(List<string> tovarMotoPiter)
         {
             string[] articles = tovarMotoPiter[0].Split(';');
@@ -1327,7 +1357,7 @@ namespace DriveBike
                     podPriceSTR = podPriceSTR.Replace("р.", "").Trim();
                     podPriceSTR = podPriceSTR.Replace("1 ", "1").Replace("2 ", "2").Replace("3 ", "3").Replace("4 ", "4").Replace("5 ", "5").Replace("6 ", "6").Replace("7 ", "7").Replace("8 ", "8").Replace("9 ", "9").Trim();
                     int podPrice = Convert.ToInt32(podPriceSTR);
-                    int priceActual = webRequest.price(podPrice, discounts);
+                    int priceActual = nethouse.ReturnPrice(podPrice, discounts);
 
                     bool availability = podName.Contains("Нет в наличии");
 
