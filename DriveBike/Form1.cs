@@ -574,7 +574,7 @@ namespace DriveBike
                 System.Threading.Thread.Sleep(20000);
                 string[] naSite1 = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
                 if (naSite1.Length > 1)
-                    nethouse.UploadCSVNethouse(cookie, "naSite.csv");
+                    nethouse.UploadCSVNethouse(cookie, "naSite.csv", tbLogin.Text, tbPassword.Text);
                 File.Delete("naSite.csv");
                 nethouse.NewListUploadinBike18("naSite");
                 #endregion
@@ -1054,7 +1054,7 @@ namespace DriveBike
                 System.Threading.Thread.Sleep(20000);
                 string[] naSite1 = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
                 if (naSite1.Length > 1)
-                    nethouse.UploadCSVNethouse(cookie, "naSite.csv");
+                    nethouse.UploadCSVNethouse(cookie, "naSite.csv", tbLogin.Text, tbPassword.Text);
                 File.Delete("naSite.csv");
                 nethouse.NewListUploadinBike18("naSite");
                 #endregion
@@ -1126,7 +1126,17 @@ namespace DriveBike
 
             if (chekedSEO)
             {
+                string article = tovarDB[0];
+                string name = tovarDB[1];
 
+                string titleText = ReplaceSEO(titleTextTemplate, name, article);
+                string descriptionText = ReplaceSEO(descriptionTextTemplate, name, article);
+                string keywordsText = ReplaceSEO(keywordsTextTemplate, name, article);
+
+                productB18[11] = Remove(descriptionText, 200);
+                productB18[12] = Remove(keywordsText, 100);
+                productB18[13] = Remove(titleText, 255);
+                edits = true;
             }
 
             if (edits)
