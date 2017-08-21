@@ -35,6 +35,8 @@ namespace DriveBike
         string keywordsTextTemplate = "";
         List<string> newProduct = new List<string>();
 
+        bool chekedSEO;
+
         public Form1()
         {
             InitializeComponent();
@@ -167,6 +169,8 @@ namespace DriveBike
             Properties.Settings.Default.password = tbPassword.Text;
             Properties.Settings.Default.Save();
 
+            chekedSEO = cbUpdateSEO.Checked;
+
             CookieDictionary cookie = nethouse.CookieNethouse(tbLogin.Text, tbPassword.Text);
 
             if (cookie.Count == 1)
@@ -205,7 +209,7 @@ namespace DriveBike
                 string allPagesText = new Regex("(?<=<ol>)[\\w\\W]*?(?=</ol>)").Match(otv).ToString();
                 MatchCollection pagesUrl = new Regex("(?<=<a href=\").*?(?=\">)").Matches(allPagesText);
                 int countPages = pagesUrl.Count;
-                int pages = 0;
+                int pages = 1;
 
                 do
                 {
@@ -245,7 +249,7 @@ namespace DriveBike
                         }
                     }
                     pages++;
-                } while (pages <= countPages);
+                } while (pages < countPages);
 
                 #region старый код
                 /*
@@ -1118,6 +1122,11 @@ namespace DriveBike
             {
                 productB18[9] = priceDB.ToString();
                 edits = true;
+            }
+
+            if (chekedSEO)
+            {
+
             }
 
             if (edits)

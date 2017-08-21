@@ -43,6 +43,7 @@
             this.btnUpdateImages = new System.Windows.Forms.Button();
             this.tbLogin = new System.Windows.Forms.TextBox();
             this.tbPassword = new System.Windows.Forms.TextBox();
+            this.cbUpdateSEO = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // rtbMiniText
@@ -172,11 +173,22 @@
             this.tbPassword.TabIndex = 14;
             this.tbPassword.UseSystemPasswordChar = true;
             // 
+            // cbUpdateSEO
+            // 
+            this.cbUpdateSEO.AutoSize = true;
+            this.cbUpdateSEO.Location = new System.Drawing.Point(704, 164);
+            this.cbUpdateSEO.Name = "cbUpdateSEO";
+            this.cbUpdateSEO.Size = new System.Drawing.Size(96, 17);
+            this.cbUpdateSEO.TabIndex = 15;
+            this.cbUpdateSEO.Text = "Обновить сео";
+            this.cbUpdateSEO.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(876, 524);
+            this.Controls.Add(this.cbUpdateSEO);
             this.Controls.Add(this.tbPassword);
             this.Controls.Add(this.tbLogin);
             this.Controls.Add(this.btnUpdateImages);
@@ -217,6 +229,7 @@
         private System.Windows.Forms.Button btnUpdateImages;
         private System.Windows.Forms.TextBox tbLogin;
         private System.Windows.Forms.TextBox tbPassword;
+        private System.Windows.Forms.CheckBox cbUpdateSEO;
     }
 }
 
