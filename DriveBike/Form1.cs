@@ -195,7 +195,7 @@ namespace DriveBike
             otv = nethouse.getRequest("http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla");
             MatchCollection categoriesUrls = new Regex("(?<=<li class=\"amshopby-cat amshopby-cat-level-1\">)[\\w\\W]*?(?=</li>)").Matches(otv);
 
-            for (int i = 0; categoriesUrls.Count > i; i++)
+            for (int i = 3; categoriesUrls.Count > i; i++)
             {
                 string categories = new Regex("(?<=<a href=\").*?(?=\">)").Match(categoriesUrls[i].ToString()).ToString();
                 if (categories == "http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla/motornoye-maslo-i-smazki")
@@ -1362,7 +1362,24 @@ namespace DriveBike
             if (price == "")
             {
                 #region Получение каких то данных
-                MatchCollection namesPodTovar = new Regex("(?<=<td>)[\\w\\W]*?(?=<td class=\"a-right\">)").Matches(otvTovar);
+
+                MatchCollection cartProduct = new Regex("(?<=<tr>)[\\w\\W]*?(?=</tr>)").Matches(otvTovar);
+                for(int i = 0; cartProduct.Count > i; i++)
+                {
+                    string name = new Regex("(?<=name=\"cur_pro_name\" value=\").*?(?=\")").Match(cartProduct[i].ToString()).ToString();
+
+                    if (name == "")
+                        continue;
+                    string priceStr = new Regex("(?<=<span class=\"price\">).*?(?=руб.)").Match(cartProduct[i].ToString()).ToString();
+                    priceStr = priceStr.Replace("1 ", "1").Replace("2 ", "2").Replace("3 ", "3").Replace("4 ", "4").Replace("5 ", "5").Replace("6 ", "6").Replace("7 ", "7").Replace("8 ", "8").Replace("9 ", "9").Trim();
+                    int priceProduct = Convert.ToInt32(priceStr);
+                    int actualPriceProduct = nethouse.ReturnPrice(priceProduct, discounts);
+
+                    nameTovar = nameTovar + ";" + name;
+                    price = price + ";" + actualPriceProduct.ToString();
+                }
+                
+               /* MatchCollection namesPodTovar = new Regex("(?<=name=\"cur_pro_name\" value=\").*(?=\")").Matches(otvTovar);
                 MatchCollection pricesPodTovar = new Regex("(?<=<span itemprop=\"price\" class=\"price\">).*?(?=руб.)").Matches(otvTovar);
                 if (pricesPodTovar.Count == 0)
                     pricesPodTovar = new Regex("(?<=<span class=\"price-label\">Без скидки:</span>)[\\w\\W]*?(?=</span>)").Matches(otvTovar);
@@ -1393,20 +1410,14 @@ namespace DriveBike
                         price = new Regex("(?<=<span class=\"price\" id=\"old-price-)[\\w\\W]*(?= р. )").Match(price).ToString();
                         price = price.Remove(0, price.IndexOf(" ")).Trim();
                     }*/
-                }
-                articl = podArticle;
+                /*}
+                articl = podArticle;*/
                 #endregion
             }
 
-            if (price.Contains("<span"))
-            {
-                price = new Regex("(?<=<span class=\"price\" id=\"old-price-19517\">)[\\w\\W]*").Match(price).ToString();
-                price = price.Trim();
-            }
-            price = price.Replace("р.", "").Trim();
-            price = price.Replace("1 ", "1").Replace("2 ", "2").Replace("3 ", "3").Replace("4 ", "4").Replace("5 ", "5").Replace("6 ", "6").Replace("7 ", "7").Replace("8 ", "8").Replace("9 ", "9").Trim();
-
             string razdel = "Запчасти и расходники => " + section1 + " => " + section2;
+
+            price = price.Remove(0, 1);
 
             tovar.Add(articl);
             tovar.Add(nameTovar);
