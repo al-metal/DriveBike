@@ -1290,10 +1290,10 @@ namespace DriveBike
         {
             List<string> tovar = new List<string>();
 
-            string urlImageProduct = new Regex("(?<=id=\"image\" src=\").*?(?=\")").Match(otvTovar).ToString();
             string articl = new Regex("(?<=Код товара:).*?(?=<br />)").Match(otvTovar).ToString().Trim();
             articl = "DB_" + articl.Replace("-", "_");
 
+            string urlImageProduct = new Regex("(?<=id=\"image\" src=\").*?(?=\")").Match(otvTovar).ToString();
             DownloadImages(urlImageProduct, articl);
 
             string nameTovar = new Regex("(?<=<li class=\"product\")[\\w\\W]*?</strong>").Match(otvTovar).ToString();
@@ -1304,6 +1304,7 @@ namespace DriveBike
             string numberCatalog = new Regex("Номер по каталогу:.*?<br />").Match(miniDescription).ToString();
             string codeCatalog = new Regex("(?<=Код товара: )[\\w\\W]*?(?=<br />)").Match(miniDescription).ToString();
             miniDescription = miniDescription.Replace(numberCatalog, "").Replace(codeCatalog, articl).Replace("'", "\"");
+
             MatchCollection ahref = new Regex("<a.*?</a>").Matches(miniDescription);
             if (ahref.Count != 0)
             {
@@ -1317,46 +1318,23 @@ namespace DriveBike
 
             string fullDescriptionTable = new Regex("(?<=<div class=\"attribute-specs\">)[\\w\\W]*?</table>").Match(otvTovar).ToString().Trim().Replace("\r\n", "");
             string fullDescription = new Regex("(?<=<div class=\"std\" itemprop=\"description\">)[\\w\\W]*?(?=</div>)").Match(otvTovar).ToString().Trim().Replace("\r\n", "");
+
             ahref = new Regex("<a.*?</a>").Matches(fullDescriptionTable);
             if (ahref.Count != 0)
-            {
-                foreach (Match str in ahref)
-                {
-                    string urls = str.ToString();
-                    if (urls != "")
-                        fullDescriptionTable = fullDescriptionTable.Replace(urls, "");
-                }
-            }
+                fullDescriptionTable = ReplaceUrl(ahref, fullDescriptionTable);
+
             ahref = new Regex("<a.*?</a>").Matches(fullDescription);
             if (ahref.Count != 0)
-            {
-                foreach (Match str in ahref)
-                {
-                    string urls = str.ToString();
-                    if (urls != "")
-                        fullDescription = fullDescription.Replace(urls, "");
-                }
-            }
+                fullDescription = ReplaceUrl(ahref, fullDescription);
+
+
             MatchCollection atributes = new Regex("(?<=<table).*?(?=>)").Matches(fullDescriptionTable);
             if (atributes.Count != 0)
-            {
-                foreach (Match str in atributes)
-                {
-                    string urls = str.ToString();
-                    if (urls != "")
-                        fullDescriptionTable = fullDescriptionTable.Replace(urls, "");
-                }
-            }
+                fullDescriptionTable = ReplaceUrl(atributes, fullDescriptionTable);
+
             atributes = new Regex("(?<=<td).*?(?=>)").Matches(fullDescriptionTable);
             if (atributes.Count != 0)
-            {
-                foreach (Match str in atributes)
-                {
-                    string urls = str.ToString();
-                    if (urls != "")
-                        fullDescriptionTable = fullDescriptionTable.Replace(urls, "");
-                }
-            }
+                fullDescriptionTable = ReplaceUrl(atributes, fullDescriptionTable);
 
             string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otvTovar).ToString();
             if (price == "")
@@ -1427,6 +1405,17 @@ namespace DriveBike
             tovar.Add(razdel);
 
             return tovar;
+        }
+
+        private string ReplaceUrl(MatchCollection urls, string text)
+        {
+            foreach (Match str in urls)
+            {
+                string url = str.ToString();
+                if (url != "")
+                    text = text.Replace(url, "");
+            }
+            return text;
         }
 
         private void DownloadImages(string urlImageProduct, string articl)
