@@ -1286,9 +1286,10 @@ namespace DriveBike
             return urlTovar;
         }
 
-        private List<string> getTovarDB(string otvTovar, string section1, string section2)
+        private List<string[]> getTovarDB(string otvTovar, string section1, string section2)
         {
-            List<string> tovar = new List<string>();
+            List<string[]> tovarsList = new List<string[]>();
+            string[] product = new string[6]; 
 
             string articl = new Regex("(?<=Код товара:).*?(?=<br />)").Match(otvTovar).ToString().Trim();
             articl = "DB_" + articl.Replace("-", "_");
@@ -1336,75 +1337,52 @@ namespace DriveBike
             if (atributes.Count != 0)
                 fullDescriptionTable = ReplaceUrl(atributes, fullDescriptionTable);
 
+            string razdel = "Запчасти и расходники => " + section1 + " => " + section2;
+
             string price = new Regex("(?<=<meta itemprop=\"price\" content=\").*?(?=\" />)").Match(otvTovar).ToString();
             if (price == "")
             {
-                #region Получение каких то данных
-
                 MatchCollection cartProduct = new Regex("(?<=<tr>)[\\w\\W]*?(?=</tr>)").Matches(otvTovar);
-                for(int i = 0; cartProduct.Count > i; i++)
+                for (int i = 0; cartProduct.Count > i; i++)
                 {
                     string name = new Regex("(?<=name=\"cur_pro_name\" value=\").*?(?=\")").Match(cartProduct[i].ToString()).ToString();
 
                     if (name == "")
                         continue;
+
                     string priceStr = new Regex("(?<=<span class=\"price\">).*?(?=руб.)").Match(cartProduct[i].ToString()).ToString();
                     priceStr = priceStr.Replace("1 ", "1").Replace("2 ", "2").Replace("3 ", "3").Replace("4 ", "4").Replace("5 ", "5").Replace("6 ", "6").Replace("7 ", "7").Replace("8 ", "8").Replace("9 ", "9").Trim();
                     int priceProduct = Convert.ToInt32(priceStr);
                     int actualPriceProduct = nethouse.ReturnPrice(priceProduct, discounts);
 
-                    nameTovar = nameTovar + ";" + name;
-                    price = price + ";" + actualPriceProduct.ToString();
+                    product[0] = articl;
+                    product[1] = name;
+                    product[2] = actualPriceProduct.ToString();
+                    product[3] = miniDescription;
+                    product[4] = "<p>" + fullDescriptionTable + "</p><p>" + fullDescription + "</p>";
+                    product[5] = razdel;
+
+                    tovarsList.Add(product);
                 }
-                
-               /* MatchCollection namesPodTovar = new Regex("(?<=name=\"cur_pro_name\" value=\").*(?=\")").Matches(otvTovar);
-                MatchCollection pricesPodTovar = new Regex("(?<=<span itemprop=\"price\" class=\"price\">).*?(?=руб.)").Matches(otvTovar);
-                if (pricesPodTovar.Count == 0)
-                    pricesPodTovar = new Regex("(?<=<span class=\"price-label\">Без скидки:</span>)[\\w\\W]*?(?=</span>)").Matches(otvTovar);
-                MatchCollection availabilitysTovar = new Regex("(?<=<td class=\"a-center\">)[\\w\\W]*?(?=</td>)").Matches(otvTovar);
-                nameTovar = "";
-                string podArticle = "";
-                for (int a = 0; namesPodTovar.Count > a; a++)
-                {
-                    string podName = namesPodTovar[a].ToString().Replace("\n", "").Replace("</td>", "").Trim();
-                    string podPriceSTR = pricesPodTovar[a].ToString();
-                    podPriceSTR = podPriceSTR.Replace("р.", "").Trim();
-                    podPriceSTR = podPriceSTR.Replace("1 ", "1").Replace("2 ", "2").Replace("3 ", "3").Replace("4 ", "4").Replace("5 ", "5").Replace("6 ", "6").Replace("7 ", "7").Replace("8 ", "8").Replace("9 ", "9").Trim();
-                    int podPrice = Convert.ToInt32(podPriceSTR);
-                    int priceActual = nethouse.ReturnPrice(podPrice, discounts);
+            }
+            else
+            {
+                int priceProduct = Convert.ToInt32(price);
+                int actualPriceProduct = nethouse.ReturnPrice(priceProduct, discounts);
+                price = actualPriceProduct.ToString();
+                price = price.Remove(0, 1);
 
-                    bool availability = podName.Contains("Нет в наличии");
+                product[0] = articl;
+                product[1] = nameTovar;
+                product[2] = price;
+                product[3] = miniDescription;
+                product[4] = "<p>" + fullDescriptionTable + "</p><p>" + fullDescription + "</p>";
+                product[5] = razdel;
 
-                    if (availability)
-                        continue;
-
-                    podArticle = podArticle + ";" + articl + "_" + a;
-                    nameTovar = nameTovar + ";" + podName;
-                    price = price + ";" + priceActual.ToString();
-                    /*
-                    price = pricesPodTovar[a].ToString();
-                    if (price.Contains("<span"))
-                    {
-                        price = new Regex("(?<=<span class=\"price\" id=\"old-price-)[\\w\\W]*(?= р. )").Match(price).ToString();
-                        price = price.Remove(0, price.IndexOf(" ")).Trim();
-                    }*/
-                /*}
-                articl = podArticle;*/
-                #endregion
+                tovarsList.Add(product);
             }
 
-            string razdel = "Запчасти и расходники => " + section1 + " => " + section2;
-
-            price = price.Remove(0, 1);
-
-            tovar.Add(articl);
-            tovar.Add(nameTovar);
-            tovar.Add(price);
-            tovar.Add(miniDescription);
-            tovar.Add("<p>" + fullDescriptionTable + "</p><p>" + fullDescription + "</p>");
-            tovar.Add(razdel);
-
-            return tovar;
+            return tovarsList;
         }
 
         private string ReplaceUrl(MatchCollection urls, string text)
