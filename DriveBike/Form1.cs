@@ -231,9 +231,25 @@ namespace DriveBike
 
                         string otvTovar = nethouse.getRequest(urlTovar);
 
-                        List<string> tovarDB = getTovarDB(otvTovar, section1, section2);
+                        List<string[]> tovarDB = getTovarDB(otvTovar, section1, section2);
 
-                        string resultSearch = SearchTovar(tovarDB);
+                        string[] resultSearch = SearchTovar(tovarDB);
+
+                        for(int y = 0; resultSearch.Length > y; y++)
+                        {
+                            string urlProduct = resultSearch[y];
+                            string[] product = tovarDB[y];
+
+                            if(urlProduct == "")
+                            {
+                                WriteTovarInCSV(product);
+                            }
+                            else
+                            {
+                                UpdatePrice(cookie, urlProduct, product);
+                            }
+                        }
+                        /*
                         if (resultSearch == null || resultSearch == "")
                         {
                             WriteTovarInCSV(tovarDB);
@@ -246,7 +262,7 @@ namespace DriveBike
                                     if (urlSearch != "")
                                         UpdatePrice(cookie, urlSearch, tovarDB);
                                 }
-                        }
+                        }*/
                     }
                     pages++;
                 } while (pages < countPages);
@@ -626,6 +642,26 @@ namespace DriveBike
 
                         string otvTovar = nethouse.getRequest(urlTovar);
 
+                        List<string[]> tovarDB = getTovarDB(otvTovar, section1, section2);
+
+                        string[] resultSearch = SearchTovar(tovarDB);
+
+                        for (int y = 0; resultSearch.Length > y; y++)
+                        {
+                            string urlProduct = resultSearch[y];
+                            string[] product = tovarDB[y];
+
+                            if (urlProduct == "")
+                            {
+                                WriteTovarInCSV(product);
+                            }
+                            else
+                            {
+                                UpdatePrice(cookie, urlProduct, product);
+                            }
+                        }
+
+                        /*
                         List<string> tovarDB = getTovarDB(otvTovar, section1, section2);
 
                         string resultSearch = SearchTovar(tovarDB);
@@ -640,8 +676,8 @@ namespace DriveBike
                                 {
                                     if (urlSearch != "")
                                         UpdatePrice(cookieNethouse, urlSearch, tovarMotoPiter);
-                                }*/
-                        }
+                                }
+                        }*/
                     }
                 } while (pages < countPages);
 
@@ -1107,9 +1143,50 @@ namespace DriveBike
             MessageBox.Show("Обновлено товаров на сайте");
         }
 
-        private void UpdatePrice(CookieDictionary cookie, string urlSearch, List<string> tovarDB)
+        private void UpdatePrice(CookieDictionary cookie, string urlSearch, string[] tovarDB)
         {
             bool edits = false;
+
+            string article = tovarDB[0];
+            string name = tovarDB[1];
+            string price = tovarDB[2];
+            string miniText = tovarDB[3];
+            string fullText = tovarDB[4];
+
+            List<string> productB18 = new List<string>();
+            productB18 = nethouse.GetProductList(cookie, urlSearch);
+            if (productB18 == null)
+                return;
+
+            int priceDB = Convert.ToInt32(price);
+            int priceB18 = Convert.ToInt32(productB18[9]);
+
+            if (priceB18 != priceDB)
+            {
+                productB18[9] = priceDB.ToString();
+                edits = true;
+            }
+
+            if (chekedSEO)
+            {
+                string titleText = ReplaceSEO(titleTextTemplate, name, article);
+                string descriptionText = ReplaceSEO(descriptionTextTemplate, name, article);
+                string keywordsText = ReplaceSEO(keywordsTextTemplate, name, article);
+
+                productB18[11] = Remove(descriptionText, 200);
+                productB18[12] = Remove(keywordsText, 100);
+                productB18[13] = Remove(titleText, 255);
+                edits = true;
+            }
+
+            if (edits)
+            {
+                nethouse.SaveTovar(cookie, productB18);
+                editsProduct++;
+            }
+
+
+            /*
             List<string> productB18 = new List<string>();
             productB18 = nethouse.GetProductList(cookie, urlSearch);
             if (productB18 == null)
@@ -1145,12 +1222,57 @@ namespace DriveBike
                 editsProduct++;
             }
 
-
+            */
 
         }
 
-        private void WriteTovarInCSV(List<string> tovarMotoPiter)
+        private void WriteTovarInCSV(string[] tovarDB)
         {
+            string article = tovarDB[0];
+            string name = tovarDB[1];
+            string price = tovarDB[2];
+            string miniText = tovarDB[3];
+            string fullText = tovarDB[4];
+            string razdel = tovarDB[5];
+
+            string slug = chpu.vozvr(name);
+            slug = Remove(slug, 64);
+
+            miniText = Replace(miniTextTemplate, name, article, miniText, "");
+            fullText = Replace(fullTextTemplate, name, article, "", fullText);
+
+            string titleText = ReplaceSEO(titleTextTemplate, name, article);
+            string descriptionText = ReplaceSEO(descriptionTextTemplate, name, article);
+            string keywordsText = ReplaceSEO(keywordsTextTemplate, name, article);
+
+            titleText = Remove(titleText, 255);
+            descriptionText = Remove(descriptionText, 200);
+            keywordsText = Remove(keywordsText, 100);
+
+            newProduct = new List<string>();
+            newProduct.Add(""); //id
+            newProduct.Add("\"" + article + "\""); //артикул
+            newProduct.Add("\"" + name + "\"");  //название
+            newProduct.Add("\"" + price + "\""); //стоимость
+            newProduct.Add("\"" + "" + "\""); //со скидкой
+            newProduct.Add("\"" + razdel + "\""); //раздел товара
+            newProduct.Add("\"" + "100" + "\""); //в наличии
+            newProduct.Add("\"" + "0" + "\"");//поставка
+            newProduct.Add("\"" + "1" + "\"");//срок поставки
+            newProduct.Add("\"" + miniText + "\"");//краткий текст
+            newProduct.Add("\"" + fullText + "\"");//полностью текст
+            newProduct.Add("\"" + titleText + "\""); //заголовок страницы
+            newProduct.Add("\"" + descriptionText + "\""); //описание
+            newProduct.Add("\"" + keywordsText + "\"");//ключевые слова
+            newProduct.Add("\"" + slug + "\""); //ЧПУ
+            newProduct.Add(""); //с этим товаром покупают
+            newProduct.Add("");   //рекламные метки
+            newProduct.Add("\"" + "1" + "\"");  //показывать
+            newProduct.Add("\"" + "0" + "\""); //удалить
+
+            files.fileWriterCSV(newProduct, "naSite");
+
+            /*
             string[] articles = tovarMotoPiter[0].Split(';');
             string[] names = tovarMotoPiter[1].Split(';');
             string[] prices = tovarMotoPiter[2].Split(';');
@@ -1261,10 +1383,53 @@ namespace DriveBike
             files.fileWriterCSV(newProduct, "naSite");*/
         }
 
-        private string SearchTovar(List<string> tovarDB)
+        private string[] SearchTovar(List<string[]> tovarDB)
         {
-            string urlTovar = "";
+            //string urlTovar = "";
+            int countTovars = tovarDB.Count;
+            string[] search = new string[countTovars];
 
+            for (int i = 0; countTovars > i; i++)
+            {
+                string[] product = tovarDB[i];
+                
+                string articl = product[0];
+                string name = product[1];
+
+                otv = webRequest.getRequest("https://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + articl);
+                MatchCollection cartSearchProducts = new Regex("(?<=<div class=\"product-item__link\">).*?(?=</div>)").Matches(otv);
+                for(int y = 0; cartSearchProducts.Count > y; y++)
+                {
+                    string cartSearch = cartSearchProducts[y].ToString();
+                    string nameSearch = new Regex("(?<=\">).*?(?=</a>)").Match(cartSearch).ToString();
+                    string urlSearch = new Regex("(?<=<a href=\").*?(?=\">)").Match(cartSearch).ToString();
+
+                    if(name == nameSearch)
+                    {
+                        search[i] = urlSearch;
+                    }
+                    else
+                    {
+                        search[i] = "";
+                    }
+                }
+                if(cartSearchProducts.Count == 0)
+                    search[i] = "";
+
+                /* MatchCollection strUrlProd1 = new Regex("(?<=<a href=\").*(?=\"><div class=\"-relative item-image\")").Matches(otv);
+                 for (int t = 0; strUrlProd1.Count > t; t++)
+                 {
+                     string nameProduct1 = new Regex("(?<=<a href=\\\"" + strUrlProd1[t].ToString() + "\" >).*?(?=</a>)").Match(otv).ToString().Replace("&amp;quot;", "").Replace("&#039;", "'").Replace("&amp;gt;", ">").Replace("  ", " ").Trim();
+                     if (name == nameProduct1)
+                     {
+                         urlTovarBike = strUrlProd1[t].ToString();
+                         break;
+                     }
+                 }*/
+
+
+            }
+            /*
             string[] names = tovarDB[1].ToString().Split(';');
             string[] articles = tovarDB[0].ToString().Split(';');
 
@@ -1282,8 +1447,9 @@ namespace DriveBike
                     }
                 }
             }
-
-            return urlTovar;
+            
+            return urlTovar;*/
+            return search;
         }
 
         private List<string[]> getTovarDB(string otvTovar, string section1, string section2)
@@ -1308,14 +1474,7 @@ namespace DriveBike
 
             MatchCollection ahref = new Regex("<a.*?</a>").Matches(miniDescription);
             if (ahref.Count != 0)
-            {
-                foreach (Match str in ahref)
-                {
-                    string urls = str.ToString();
-                    if (urls != "")
-                        miniDescription = miniDescription.Replace(urls, "");
-                }
-            }
+                miniDescription = ReplaceUrl(ahref, miniDescription);
 
             string fullDescriptionTable = new Regex("(?<=<div class=\"attribute-specs\">)[\\w\\W]*?</table>").Match(otvTovar).ToString().Trim().Replace("\r\n", "");
             string fullDescription = new Regex("(?<=<div class=\"std\" itemprop=\"description\">)[\\w\\W]*?(?=</div>)").Match(otvTovar).ToString().Trim().Replace("\r\n", "");
@@ -1346,6 +1505,7 @@ namespace DriveBike
                 for (int i = 0; cartProduct.Count > i; i++)
                 {
                     string name = new Regex("(?<=name=\"cur_pro_name\" value=\").*?(?=\")").Match(cartProduct[i].ToString()).ToString();
+                    name = name.Replace("[", "").Replace("]", "");
 
                     if (name == "")
                         continue;
@@ -1370,7 +1530,6 @@ namespace DriveBike
                 int priceProduct = Convert.ToInt32(price);
                 int actualPriceProduct = nethouse.ReturnPrice(priceProduct, discounts);
                 price = actualPriceProduct.ToString();
-                price = price.Remove(0, 1);
 
                 product[0] = articl;
                 product[1] = nameTovar;
