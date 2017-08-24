@@ -416,9 +416,9 @@ namespace DriveBike
                 string descriptionText = ReplaceSEO(descriptionTextTemplate, name, article);
                 string keywordsText = ReplaceSEO(keywordsTextTemplate, name, article);
 
-                productB18[11] = Remove(descriptionText, 200);
-                productB18[12] = Remove(keywordsText, 100);
-                productB18[13] = Remove(titleText, 255);
+                productB18[11] = nethouse.Remove(descriptionText, 200);
+                productB18[12] = nethouse.Remove(keywordsText, 100);
+                productB18[13] = nethouse.Remove(titleText, 255);
                 edits = true;
             }
 
@@ -439,7 +439,7 @@ namespace DriveBike
             string razdel = tovarDB[5];
 
             string slug = chpu.vozvr(name);
-            slug = Remove(slug, 64);
+            slug = nethouse.Remove(slug, 64);
 
             miniText = Replace(miniTextTemplate, name, article, miniText, "");
             fullText = Replace(fullTextTemplate, name, article, "", fullText);
@@ -448,9 +448,9 @@ namespace DriveBike
             string descriptionText = ReplaceSEO(descriptionTextTemplate, name, article);
             string keywordsText = ReplaceSEO(keywordsTextTemplate, name, article);
 
-            titleText = Remove(titleText, 255);
-            descriptionText = Remove(descriptionText, 200);
-            keywordsText = Remove(keywordsText, 100);
+            titleText = nethouse.Remove(titleText, 255);
+            descriptionText = nethouse.Remove(descriptionText, 200);
+            keywordsText = nethouse.Remove(keywordsText, 100);
 
             newProduct = new List<string>();
             newProduct.Add(""); //id
@@ -669,65 +669,6 @@ namespace DriveBike
             return nameTovar;
         }
 
-        private void dowloadImagesTovar(string urlImageProduct, string articl)
-        {
-            try
-            {
-                webClient.DownloadFile(urlImageProduct, "pic\\" + articl + ".jpg");
-            }
-            catch
-            {
-
-            }
-        }
-
-        private void ErrorDownloadInSite37(string otvimg)
-        {
-            string errstr = new Regex("(?<=errorLine\":).*?(?=,\")").Match(otvimg).ToString();
-            string[] naSite = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
-            int u = Convert.ToInt32(errstr) - 1;
-            string[] strslug3 = naSite[u].ToString().Split(';');
-            string strslug = strslug3[strslug3.Length - 5];
-            int slug = strslug.Length;
-            int countAdd = ReturnCountAdd();
-            int countDel = countAdd.ToString().Length;
-            if (strslug.Contains("\""))
-            {
-                countDel = countDel + 2;
-            }
-            string strslug2 = strslug.Remove(slug - countDel);
-            strslug2 += countAdd;
-            strslug2 = strslug2.Replace("”", "").Replace("~", "").Replace("#", "");
-            if (strslug2.Contains("\""))
-            {
-                strslug2 = strslug2 + "\"";
-                countDel = countDel - 2;
-            }
-            naSite[u] = naSite[u].Replace(strslug, strslug2);
-            File.WriteAllLines("naSite.csv", naSite, Encoding.GetEncoding(1251));
-        }
-
-        private void ErrorDownloadInSite13(string otvimg)
-        {
-            string errstr = new Regex("(?<=errorLine\":).*?(?=,\")").Match(otvimg).ToString();
-            string[] naSite = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
-            int u = Convert.ToInt32(errstr) - 1;
-            string[] strslug3 = naSite[u].ToString().Split(';');
-            string strslug = strslug3[strslug3.Length - 5];
-            int slug = strslug.Length;
-            int countAdd = ReturnCountAdd();
-            int countDel = countAdd.ToString().Length;
-            if (strslug.Contains("\""))
-                countDel = countDel + 1;
-            string strslug2 = strslug.Remove(slug - countDel);
-            if (strslug.Contains("\""))
-                strslug2 += countAdd + "\"";
-            else
-                strslug2 += countAdd;
-            naSite[u] = naSite[u].Replace(strslug, strslug2);
-            File.WriteAllLines("naSite.csv", naSite, Encoding.GetEncoding(1251));
-        }
-
         private bool ReturnBoolB(MatchCollection searchTovars, string nameTovar)
         {
             bool b = false;
@@ -751,23 +692,6 @@ namespace DriveBike
         {
             string table = new Regex("<table[\\w\\W]*?</table>").Match(otv).ToString().Replace("\n        ", "").Replace("            ", " ").Replace("  ", " ").Replace("    ", " ").Replace("        ", " ").Replace("  ", "").Replace("\n", "").Replace(" class=\"data\"", "").Replace(" class=\"label\"", "").Replace(" class=\"data-table\" id=\"product-attribute-specs-table\"><col width=\"25%\" /><col /", "");
             return table;
-        }
-
-        private string ReturnPrice(string tv)
-        {
-
-            string pricePodtovar = new Regex("(?<=span class=\"price\">).*(?= р.</span)").Match(tv).ToString();
-            if (pricePodtovar == "")
-                pricePodtovar = new Regex("(?<=span class=\"price-label\"></span>)[\\w\\W]*?(?=</span)").Match(tv).ToString();
-            if (pricePodtovar.Contains("\n"))
-                pricePodtovar = new Regex("(?<=\">)[\\w\\W]*?(?= р.)").Match(pricePodtovar).ToString();
-            pricePodtovar = pricePodtovar.Replace("р.", "").Trim();
-            pricePodtovar = pricePodtovar.Replace("1 ", "1").Replace("2 ", "2").Replace("3 ", "3").Replace("4 ", "4").Replace("5 ", "5").Replace("6 ", "6").Replace("7 ", "7").Replace("8 ", "8").Replace("9 ", "9").Replace("0 ", "0").Trim();
-            if (pricePodtovar == "")
-            {
-
-            }
-            return pricePodtovar;
         }
 
         private void btnUpdateImages_Click(object sender, EventArgs e)
@@ -924,7 +848,7 @@ namespace DriveBike
                             string otvSave = SaveImages(urlSaveImg, prodId, widthImg, heigthImg);
                             List<string> listProd = webRequest.arraySaveimage(urlTovar);
                             listProd[3] = "10833347";
-                            listProd[42] = alsoBuyTovars(listProd);
+                            listProd[42] = nethouse.alsoBuyTovars(listProd);
                             otv = webRequest.saveTovar(listProd);
                             if (otv.Contains("errors"))
                             {
@@ -986,7 +910,7 @@ namespace DriveBike
 
         private string Replace(string text, string nameTovar, string article, string miniText, string fullText)
         {
-            string discount = Discount();
+            string discount = nethouse.Discount();
             string nameText = boldOpen + nameTovar + boldClose;
             text = text.Replace("СКИДКА", discount).Replace("НАЗВАНИЕ", nameText).Replace("АРТИКУЛ", article).Replace("МИНИТЕКСТ", miniText).Replace("ТЕКСТ", fullText).Replace("<p><br /></p><p><br /></p><p><br /></p><p>", "<p><br /></p>");
             return text;
@@ -994,103 +918,9 @@ namespace DriveBike
 
         private string ReplaceSEO(string text, string nameTovarRacerMotors, string article)
         {
-            string discount = Discount();
+            string discount = nethouse.Discount();
             text = text.Replace("СКИДКА", discount).Replace("НАЗВАНИЕ", nameTovarRacerMotors).Replace("АРТИКУЛ", article);
             return text;
-        }
-
-        private string Discount()
-        {
-            string discount = "<p style=\"\"text-align: right;\"\"><span style=\"\"font -weight: bold; font-weight: bold;\"\"> Сделай ТРОЙНОЙ удар по нашим ценам! </span></p><p style=\"\"text-align: right;\"\"><span style=\"\"font -weight: bold; font-weight: bold;\"\"> 1. <a target=\"\"_blank\"\" href =\"\"http://bike18.ru/stock\"\"> Скидки за отзывы о товарах!</a> </span></p><p style=\"\"text-align: right;\"\"><span style=\"\"font -weight: bold; font-weight: bold;\"\"> 2. <a target=\"\"_blank\"\" href =\"\"http://bike18.ru/stock\"\"> Друзьям скидки и подарки!</a> </span></p><p style=\"\"text-align: right;\"\"><span style=\"\"font -weight: bold; font-weight: bold;\"\"> 3. <a target=\"\"_blank\"\" href =\"\"http://bike18.ru/stock\"\"> Нашли дешевле!? 110% разницы Ваши!</a></span></p>";
-            return discount;
-        }
-
-        private string Remove(string text, int v)
-        {
-            if (text.Length > v)
-            {
-                text = text.Remove(v);
-                try
-                {
-                    text = text.Remove(text.LastIndexOf(" "));
-                }
-                catch
-                {
-
-                }
-            }
-            return text;
-        }
-
-        private int ReturnCountAdd()
-        {
-            if (addCount == 99)
-                addCount = 0;
-            addCount++;
-            return addCount;
-        }
-
-        public string DownloadNaSite()
-        {
-            CookieContainer cookie = webRequest.webCookieBike18();
-            string epoch = (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalMilliseconds.ToString().Replace(",", "");
-            HttpWebRequest req = (HttpWebRequest)HttpWebRequest.Create("http://bike18.nethouse.ru/api/export-import/import-from-csv?fileapi" + epoch);
-            req.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-            req.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0";
-            req.Method = "POST";
-            req.ContentType = "multipart/form-data; boundary=---------------------------12709277337355";
-            req.CookieContainer = cookie;
-            req.Headers.Add("X-Requested-With", "XMLHttpRequest");
-            byte[] csv = File.ReadAllBytes("naSite.csv");
-            byte[] end = Encoding.ASCII.GetBytes("\r\n-----------------------------12709277337355\r\nContent-Disposition: form-data; name=\"_catalog_file\"\r\n\r\nnaSite.csv\r\n-----------------------------12709277337355--\r\n");
-            byte[] ms1 = Encoding.ASCII.GetBytes("-----------------------------12709277337355\r\nContent-Disposition: form-data; name=\"catalog_file\"; filename=\"naSite.csv\"\r\nContent-Type: text/csv\r\n\r\n");
-            req.ContentLength = ms1.Length + csv.Length + end.Length;
-            Stream stre1 = req.GetRequestStream();
-            stre1.Write(ms1, 0, ms1.Length);
-            stre1.Write(csv, 0, csv.Length);
-            stre1.Write(end, 0, end.Length);
-            stre1.Close();
-            HttpWebResponse resimg = (HttpWebResponse)req.GetResponse();
-            StreamReader ressrImg = new StreamReader(resimg.GetResponseStream());
-            string otvimg = ressrImg.ReadToEnd();
-            return otvimg;
-        }
-
-        public string ChekedLoading()
-        {
-            CookieContainer cookie = webRequest.webCookieBike18();
-            HttpWebRequest req = (HttpWebRequest)HttpWebRequest.Create("http://bike18.nethouse.ru/api/export-import/check-import");
-            req.Accept = "application/json, text/plain, */*";
-            req.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0";
-            req.Method = "POST";
-            req.ContentLength = 0;
-            req.ContentType = "application/x-www-form-urlencoded";
-            req.CookieContainer = cookie;
-            Stream stre1 = req.GetRequestStream();
-            stre1.Close();
-            HttpWebResponse resimg = (HttpWebResponse)req.GetResponse();
-            StreamReader ressrImg = new StreamReader(resimg.GetResponseStream());
-            string otvimg = ressrImg.ReadToEnd();
-            return otvimg;
-        }
-
-        private string alsoBuyTovars(List<string> tovarList)
-        {
-            string name = tovarList[4].ToString();
-            otv = webRequest.getRequest("http://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + name);
-            MatchCollection searchTovars = new Regex("(?<=<div class=\"product-item preview-size-156\" id=\"item).*?(?=\"><div class=\"background\">)").Matches(otv);
-            string alsoBuy = "";
-            int count = 0;
-            if (searchTovars.Count > 1)
-            {
-                for (int i = 1; 5 > i; i++)
-                {
-
-                    alsoBuy += "&alsoBuy[" + count + "]=" + searchTovars[i].ToString();
-                    count++;
-                }
-            }
-            return alsoBuy;
         }
 
         public string DownloadImages(string artProd)
