@@ -20,8 +20,8 @@ namespace DriveBike
         WebClient webClient = new WebClient();
         nethouse nethouse = new nethouse();
 
-        int addCount = 0;
         int editsProduct = 0;
+        int delTovar = 0;
         string boldOpen = "<span style=\"\"font-weight: bold; font-weight: bold; \"\">";
         string boldClose = "</span>";
         double discounts = 0.02;
@@ -179,6 +179,7 @@ namespace DriveBike
             }
 
             File.Delete("naSite.csv");
+            File.Delete("allTovars");
             nethouse.NewListUploadinBike18("naSite");
 
             #endregion
@@ -190,6 +191,7 @@ namespace DriveBike
             keywordsTextTemplate = tbKeywords.Lines[0].ToString();
 
             editsProduct = 0;
+            delTovar = 0;
 
             otv = nethouse.getRequest("http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla");
             MatchCollection categoriesUrls = new Regex("(?<=<li class=\"amshopby-cat amshopby-cat-level-1\">)[\\w\\W]*?(?=</li>)").Matches(otv);
@@ -252,21 +254,12 @@ namespace DriveBike
                     pages++;
                 } while (pages < countPages);
 
-                //загружаем на сайт
-                #region
-                System.Threading.Thread.Sleep(20000);
-                string[] naSite1 = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
-                if (naSite1.Length > 1)
-                    nethouse.UploadCSVNethouse(cookie, "naSite.csv", tbLogin.Text, tbPassword.Text);
-                File.Delete("naSite.csv");
-                nethouse.NewListUploadinBike18("naSite");
-                #endregion
+                UploadNewProductInB18(cookie);
 
             }
 
             //запчасти
             File.Delete("naSite.csv");
-            File.Delete("noAvailability");
             nethouse.NewListUploadinBike18("naSite.csv");
 
             otv = webRequest.getRequest("http://www.drivebike.ru/zapchasti");
@@ -328,62 +321,96 @@ namespace DriveBike
                     }
                 } while (pages < countPages);
 
-                //загружаем на сайт
-                #region
-                System.Threading.Thread.Sleep(20000);
-                string[] naSite1 = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
-                if (naSite1.Length > 1)
-                    nethouse.UploadCSVNethouse(cookie, "naSite.csv", tbLogin.Text, tbPassword.Text);
-                File.Delete("naSite.csv");
-                nethouse.NewListUploadinBike18("naSite");
-                #endregion
+                UploadNewProductInB18(cookie);
 
-                //обновляем наличие товара
-                #region
-                /*
-                System.Threading.Thread.Sleep(70000);
-                if (File.Exists("noAvailability"))
+                DeleteTovarsInBike18(cookie, "https://bike18.ru/products/category/rashodniki-dlya-yaponskih-evropeyskih-amerikanskih-motociklov");
+                DeleteTovarsInBike18(cookie, "https://bike18.ru/products/category/zapchasti-dlya-yaponskih-evropeyskih-amerikanskih-motociklov");
+            }
+            MessageBox.Show("Обновлено товаров на сайте " + editsProduct +
+                "\nУдалено товаров " + delTovar);
+        }
+        private void DeleteTovarsInBike18(CookieDictionary cookie, string url)
+        {
+            string[] allTovars = File.ReadAllLines("allTovars", Encoding.GetEncoding(1251));
+            if (allTovars.Length <= 1)
+                return;
+
+            string otv = null;
+            otv = nethouse.getRequest(url);
+            MatchCollection product = new Regex("(?<=<a href=\").*(?=\"><div class=\"-relative item-image\")").Matches(otv);
+            MatchCollection razdel = new Regex("(?<=<div class=\"category-capt-txt -text-center\"><a href=\").*?(?=\" class=\"blue\">)").Matches(otv);
+            if (razdel.Count == 0)
+            {
+                if (product.Count != 0)
                 {
-                    string[] noAvailabilityArr = File.ReadAllLines("noAvailability");
-                    if (noAvailabilityArr.Length > 0)
+                    for (int m = 0; product.Count > m; m++)
                     {
-                        for (int z = 0; noAvailabilityArr.Length > z; z++)
+                        FindDeleteProduct(cookie, product[m].ToString(), allTovars);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; razdel.Count > i; i++)
+                {
+                    url = razdel[i].ToString();
+                    otv = nethouse.getRequest(url);
+                    product = new Regex("(?<=<a href=\").*(?=\"><div class=\"-relative item-image\")").Matches(otv);
+                    List<string> tovar = new List<string>();
+                    if (product.Count != 0)
+                    {
+                        for (int m = 0; product.Count > m; m++)
                         {
-                            string[] str = noAvailabilityArr[z].Split(';');
-                            string articl = str[0];
-                            string name = str[1];
-
-                            otv = webRequest.getRequest("http://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + name);
-                            MatchCollection searchTovars = new Regex("(?<=\" >).*?(?=</a>)").Matches(otv);
-                            bool b = ReturnBoolB(searchTovars, name);
-
-                            if (b)
-                            {
-                                //товар найден и надо обновить цену
-                                string urlTovar = null;
-                                MatchCollection searchTovarsBike = new Regex("(?<=<div class=\"product-link -text-center\"><a href=\").*?(?=\" >)").Matches(otv);
-                                for (int m = 0; searchTovarsBike.Count > m; m++)
-                                {
-                                    string searchNameTovar = new Regex("(?<=" + searchTovarsBike[m].ToString() + "\" >).*?(?=</a>)").Match(otv).ToString();
-                                    if (searchNameTovar == name)
-                                    {
-                                        urlTovar = searchTovarsBike[m].ToString();
-                                        List<string> listProd = webRequest.arraySaveimage(urlTovar);
-                                        listProd[43] = "0";
-
-                                        webRequest.saveTovar(listProd);
-                                        break;
-                                    }
-                                }
-                            }
+                            FindDeleteProduct(cookie, product[m].ToString(), allTovars);
                         }
                     }
                 }
-                */
-                #endregion
-                File.Delete("noAvailability");
             }
-            MessageBox.Show("Обновлено товаров на сайте");
+
+
+        }
+
+        private void FindDeleteProduct(CookieDictionary cookie, string url, string[] allTovars)
+        {
+            List<string> tovar = new List<string>();
+            tovar = nethouse.GetProductList(cookie, url);
+
+            string articleB18 = tovar[6].ToString();
+            string nameB18 = tovar[4].ToString();
+
+            if (!articleB18.Contains("DB_"))
+                return;
+            bool b = false;
+            foreach (string s in allTovars)
+            {
+                string[] str = s.Split(';');
+                string name = str[1];
+                string articl = str[0];
+                if (articl == articleB18 && name == nameB18)
+                    b = true;
+            }
+            if (!b)
+            {
+                nethouse.DeleteProduct(cookie, tovar);
+                delTovar++;
+            }
+        }
+
+        private void UploadNewProductInB18(CookieDictionary cookie)
+        {
+            System.Threading.Thread.Sleep(20000);
+            string[] naSite1 = File.ReadAllLines("naSite.csv", Encoding.GetEncoding(1251));
+            if (naSite1.Length > 1)
+                nethouse.UploadCSVNethouse(cookie, "naSite.csv", tbLogin.Text, tbPassword.Text);
+            File.Delete("naSite.csv");
+            nethouse.NewListUploadinBike18("naSite");
+        }
+
+        private void WrireArticleTovar(string article, string name)
+        {
+            StreamWriter sw = new StreamWriter("allTovars", true);
+            sw.WriteLine(article + ";" + name);
+            sw.Close();
         }
 
         private void UpdatePrice(CookieDictionary cookie, string urlSearch, string[] tovarDB)
@@ -569,6 +596,8 @@ namespace DriveBike
                     if (name == "")
                         continue;
 
+                    WrireArticleTovar(articl, name);
+
                     string priceStr = new Regex("(?<=<span class=\"price\">).*?(?=руб.)").Match(cartProduct[i].ToString()).ToString();
                     priceStr = priceStr.Replace("1 ", "1").Replace("2 ", "2").Replace("3 ", "3").Replace("4 ", "4").Replace("5 ", "5").Replace("6 ", "6").Replace("7 ", "7").Replace("8 ", "8").Replace("9 ", "9").Trim();
                     int priceProduct = Convert.ToInt32(priceStr);
@@ -586,6 +615,8 @@ namespace DriveBike
             }
             else
             {
+                WrireArticleTovar(articl, nameTovar);
+
                 int priceProduct = Convert.ToInt32(price);
                 int actualPriceProduct = nethouse.ReturnPrice(priceProduct, discounts);
                 price = actualPriceProduct.ToString();
@@ -969,5 +1000,4 @@ namespace DriveBike
             return otvSave;
         }
     }
-} // 2230 строк старая
-  //1570 новая
+}
