@@ -22,7 +22,9 @@ namespace DriveBike
 
         int editsProduct = 0;
         int delTovar = 0;
-        string boldOpen = "<span style=\"\"font-weight: bold; font-weight: bold; \"\">";
+        string boldOpen;
+        string boldOpenCSV = "<span style=\"\"font-weight: bold; font-weight: bold;\"\">";
+        string boldOpenSite = "<span style=\"font-weight: bold; font-weight: bold;\">";
         string boldClose = "</span>";
         double discounts = 0.02;
         FileEdit files = new FileEdit();
@@ -196,7 +198,7 @@ namespace DriveBike
             otv = nethouse.getRequest("http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla");
             MatchCollection categoriesUrls = new Regex("(?<=<li class=\"amshopby-cat amshopby-cat-level-1\">)[\\w\\W]*?(?=</li>)").Matches(otv);
 
-            for (int i = 3; categoriesUrls.Count > i; i++)
+            for (int i = 0; categoriesUrls.Count > i; i++)
             {
                 string categories = new Regex("(?<=<a href=\").*?(?=\">)").Match(categoriesUrls[i].ToString()).ToString();
                 if (categories == "http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla/motornoye-maslo-i-smazki")
@@ -243,10 +245,12 @@ namespace DriveBike
 
                             if (urlProduct == "")
                             {
+                                boldOpen = boldOpenCSV;
                                 WriteTovarInCSV(product);
                             }
                             else
                             {
+                                boldOpen = boldOpenSite;
                                 UpdatePrice(cookie, urlProduct, product);
                             }
                         }
@@ -255,14 +259,14 @@ namespace DriveBike
                 } while (pages < countPages);
 
                 UploadNewProductInB18(cookie);
-
             }
 
             //запчасти
             File.Delete("naSite.csv");
-            nethouse.NewListUploadinBike18("naSite.csv");
+            File.Delete("allTovars");
+            nethouse.NewListUploadinBike18("naSite");
 
-            otv = webRequest.getRequest("http://www.drivebike.ru/zapchasti");
+            otv = nethouse.getRequest("https://www.drivebike.ru/zapchasti");
             categoriesUrls = new Regex("(?<=<li class=\"amshopby-cat amshopby-cat-level-1\">)[\\w\\W]*?(?=</li>)").Matches(otv);
 
             for (int i = 0; categoriesUrls.Count > i; i++)
@@ -277,11 +281,10 @@ namespace DriveBike
                 string allPagesText = new Regex("(?<=<ol>)[\\w\\W]*?(?=</ol>)").Match(otv).ToString();
                 MatchCollection pagesUrl = new Regex("(?<=<a href=\").*?(?=\">)").Matches(allPagesText);
                 int countPages = pagesUrl.Count;
-                int pages = 0;
+                int pages = 1;
 
                 do
                 {
-                    pages++;
                     if (pages != 1)
                     {
                         otv = nethouse.getRequest(pagesUrl[pages].ToString());
@@ -311,14 +314,17 @@ namespace DriveBike
 
                             if (urlProduct == "")
                             {
+                                boldOpen = boldOpenCSV;
                                 WriteTovarInCSV(product);
                             }
                             else
                             {
+                                boldOpen = boldOpenSite;
                                 UpdatePrice(cookie, urlProduct, product);
                             }
                         }
                     }
+                    pages++;
                 } while (pages < countPages);
 
                 UploadNewProductInB18(cookie);
@@ -515,7 +521,7 @@ namespace DriveBike
                 string articl = product[0];
                 string name = product[1];
 
-                otv = webRequest.getRequest("https://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + articl);
+                otv = nethouse.getRequest("https://bike18.ru/products/search/page/1?sort=0&balance=&categoryId=&min_cost=&max_cost=&text=" + articl);
                 MatchCollection cartSearchProducts = new Regex("(?<=<div class=\"product-item__link\">).*?(?=</div>)").Matches(otv);
                 for (int y = 0; cartSearchProducts.Count > y; y++)
                 {
@@ -555,6 +561,10 @@ namespace DriveBike
 
             string miniDescription = new Regex("(?<=ИНФОРМАЦИЯ:</h2>)[\\w\\W]*?(?=</div>)").Match(otvTovar).ToString().Trim();
             string numberCatalog = new Regex("Номер по каталогу:.*?<br />").Match(miniDescription).ToString();
+            if(numberCatalog == "")
+            {
+
+            }
             string codeCatalog = new Regex("(?<=Код товара: )[\\w\\W]*?(?=<br />)").Match(miniDescription).ToString();
             miniDescription = miniDescription.Replace(numberCatalog, "").Replace(codeCatalog, articl).Replace("'", "\"");
 
@@ -599,7 +609,7 @@ namespace DriveBike
                     WrireArticleTovar(articl, name);
 
                     string priceStr = new Regex("(?<=<span class=\"price\">).*?(?=руб.)").Match(cartProduct[i].ToString()).ToString();
-                    priceStr = priceStr.Replace("1 ", "1").Replace("2 ", "2").Replace("3 ", "3").Replace("4 ", "4").Replace("5 ", "5").Replace("6 ", "6").Replace("7 ", "7").Replace("8 ", "8").Replace("9 ", "9").Trim();
+                    priceStr = priceStr.Replace("1 ", "1").Replace("2 ", "2").Replace("3 ", "3").Replace("4 ", "4").Replace("5 ", "5").Replace("6 ", "6").Replace("7 ", "7").Replace("8 ", "8").Replace("9 ", "9").Replace("0 ", "0").Trim();
                     int priceProduct = Convert.ToInt32(priceStr);
                     int actualPriceProduct = nethouse.ReturnPrice(priceProduct, discounts);
 
@@ -942,6 +952,7 @@ namespace DriveBike
         private string Replace(string text, string nameTovar, string article, string miniText, string fullText)
         {
             string discount = nethouse.Discount();
+            discount = discount.Replace("\"", "\"\"");
             string nameText = boldOpen + nameTovar + boldClose;
             text = text.Replace("СКИДКА", discount).Replace("НАЗВАНИЕ", nameText).Replace("АРТИКУЛ", article).Replace("МИНИТЕКСТ", miniText).Replace("ТЕКСТ", fullText).Replace("<p><br /></p><p><br /></p><p><br /></p><p>", "<p><br /></p>");
             return text;
