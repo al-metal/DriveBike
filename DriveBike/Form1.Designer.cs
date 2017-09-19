@@ -44,6 +44,7 @@
             this.tbLogin = new System.Windows.Forms.TextBox();
             this.tbPassword = new System.Windows.Forms.TextBox();
             this.cbUpdateSEO = new System.Windows.Forms.CheckBox();
+            this.cbFullText = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // rtbMiniText
@@ -183,11 +184,22 @@
             this.cbUpdateSEO.Text = "Обновить сео";
             this.cbUpdateSEO.UseVisualStyleBackColor = true;
             // 
+            // cbFullText
+            // 
+            this.cbFullText.AutoSize = true;
+            this.cbFullText.Location = new System.Drawing.Point(704, 187);
+            this.cbFullText.Name = "cbFullText";
+            this.cbFullText.Size = new System.Drawing.Size(165, 17);
+            this.cbFullText.TabIndex = 16;
+            this.cbFullText.Text = "Обновить полное описание";
+            this.cbFullText.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(876, 524);
+            this.Controls.Add(this.cbFullText);
             this.Controls.Add(this.cbUpdateSEO);
             this.Controls.Add(this.tbPassword);
             this.Controls.Add(this.tbLogin);
@@ -230,6 +242,7 @@
         private System.Windows.Forms.TextBox tbLogin;
         private System.Windows.Forms.TextBox tbPassword;
         private System.Windows.Forms.CheckBox cbUpdateSEO;
+        private System.Windows.Forms.CheckBox cbFullText;
     }
 }
 

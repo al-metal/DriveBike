@@ -35,8 +35,11 @@ namespace DriveBike
         string descriptionTextTemplate = "";
         string keywordsTextTemplate = "";
         List<string> newProduct = new List<string>();
+        string discountTemplate = "";
+        string discount = "";
 
         bool chekedSEO;
+        bool chekedFullText;
 
         public Form1()
         {
@@ -171,6 +174,8 @@ namespace DriveBike
             Properties.Settings.Default.Save();
 
             chekedSEO = cbUpdateSEO.Checked;
+            chekedFullText = cbFullText.Checked;
+            discountTemplate = nethouse.Discount();
 
             CookieDictionary cookie = nethouse.CookieNethouse(tbLogin.Text, tbPassword.Text);
 
@@ -201,11 +206,11 @@ namespace DriveBike
             for (int i = 0; categoriesUrls.Count > i; i++)
             {
                 string categories = new Regex("(?<=<a href=\").*?(?=\">)").Match(categoriesUrls[i].ToString()).ToString();
-                if (categories == "http://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla/motornoye-maslo-i-smazki")
+                if (categories == "https://www.drivebike.ru/rashodniki-dlya-motocikla-i-kvadrocikla/motornoye-maslo-i-smazki")
                     continue;
 
-                string section1 = "Расходники для японских, европейских, американских мотоциклов";
                 string section2 = new Regex("(?<=\">).*?(?=</a>)").Match(categoriesUrls[i].ToString()).ToString();
+                string section1 = ReturnSection1(section2);
 
                 otv = nethouse.getRequest(categories + "?limit=60");
 
@@ -246,11 +251,13 @@ namespace DriveBike
                             if (urlProduct == "")
                             {
                                 boldOpen = boldOpenCSV;
+                                string discount = discountTemplate;
                                 WriteTovarInCSV(product);
                             }
                             else
                             {
                                 boldOpen = boldOpenSite;
+                                string discount = discountTemplate.Replace("\"", "\"\"");
                                 UpdatePrice(cookie, urlProduct, product);
                             }
                         }
@@ -335,6 +342,53 @@ namespace DriveBike
             MessageBox.Show("Обновлено товаров на сайте " + editsProduct +
                 "\nУдалено товаров " + delTovar);
         }
+
+        private string ReturnSection1(string section2)
+        {
+            string section1 = "Расходники для японских, европейских, американских мотоциклов";
+            switch (section2)
+            {
+                case "Аккумуляторы":
+                    section1 = "Расходники для мототехники";
+                    break;
+                case "Звезды":
+                    section1 = "Расходники для мототехники";
+                    break;
+                case "Инструмент":
+                    section1 = "Аксессуары";
+                    break;
+                case "Приводные ремни":
+                    section1 = "Расходники для мототехники";
+                    break;
+                case "Сальники и пыльники":
+                    section1 = "Расходники для мототехники";
+                    break;
+                case "Свечи зажигания":
+                    section1 = "Расходники для мототехники";
+                    break;
+                case "Сцепление":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
+                    break;
+                case "Тормозные диски":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
+                    break;
+                case "Тормозные колодки":
+                    section1 = "Расходники для мототехники";
+                    break;
+                case "Цепи приводные":
+                    section1 = "Расходники для мототехники";
+                    break;
+                case "Фильтры":
+                    section1 = "Расходники для мототехники";
+                    break;
+
+                default:
+                    section1 = "Расходники для японских, европейских, американских мотоциклов";
+                    break;
+            }
+            return section1;
+        }
+
         private void DeleteTovarsInBike18(CookieDictionary cookie, string url)
         {
             string[] allTovars = File.ReadAllLines("allTovars", Encoding.GetEncoding(1251));
@@ -455,6 +509,13 @@ namespace DriveBike
                 edits = true;
             }
 
+            if(chekedFullText)
+            {
+                fullText = Replace(fullTextTemplate, name, article, "", fullText);
+                productB18[8] = fullText;
+                edits = true;
+            }
+
             if (edits)
             {
                 nethouse.SaveTovar(cookie, productB18);
@@ -561,10 +622,7 @@ namespace DriveBike
 
             string miniDescription = new Regex("(?<=ИНФОРМАЦИЯ:</h2>)[\\w\\W]*?(?=</div>)").Match(otvTovar).ToString().Trim();
             string numberCatalog = new Regex("Номер по каталогу:.*?<br />").Match(miniDescription).ToString();
-            if(numberCatalog == "")
-            {
-
-            }
+            
             string codeCatalog = new Regex("(?<=Код товара: )[\\w\\W]*?(?=<br />)").Match(miniDescription).ToString();
             miniDescription = miniDescription.Replace(numberCatalog, "").Replace(codeCatalog, articl).Replace("'", "\"");
 
@@ -582,8 +640,7 @@ namespace DriveBike
             ahref = new Regex("<a.*?</a>").Matches(fullDescription);
             if (ahref.Count != 0)
                 fullDescription = ReplaceUrl(ahref, fullDescription);
-
-
+            
             MatchCollection atributes = new Regex("(?<=<table).*?(?=>)").Matches(fullDescriptionTable);
             if (atributes.Count != 0)
                 fullDescriptionTable = ReplaceUrl(atributes, fullDescriptionTable);
@@ -951,8 +1008,7 @@ namespace DriveBike
 
         private string Replace(string text, string nameTovar, string article, string miniText, string fullText)
         {
-            string discount = nethouse.Discount();
-            discount = discount.Replace("\"", "\"\"");
+            text = text.Replace("\"\"", "\"");
             string nameText = boldOpen + nameTovar + boldClose;
             text = text.Replace("СКИДКА", discount).Replace("НАЗВАНИЕ", nameText).Replace("АРТИКУЛ", article).Replace("МИНИТЕКСТ", miniText).Replace("ТЕКСТ", fullText).Replace("<p><br /></p><p><br /></p><p><br /></p><p>", "<p><br /></p>");
             return text;
