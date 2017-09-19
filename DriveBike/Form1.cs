@@ -39,6 +39,7 @@ namespace DriveBike
         string discount = "";
 
         bool chekedSEO;
+        bool chekedMiniText;
         bool chekedFullText;
 
         public Form1()
@@ -174,6 +175,7 @@ namespace DriveBike
             Properties.Settings.Default.Save();
 
             chekedSEO = cbUpdateSEO.Checked;
+            chekedMiniText = cbMiniText.Checked;
             chekedFullText = cbFullText.Checked;
             discountTemplate = nethouse.Discount();
 
@@ -511,7 +513,14 @@ namespace DriveBike
                 edits = true;
             }
 
-            if(chekedFullText)
+            if (chekedMiniText)
+            {
+                miniText = Replace(miniTextTemplate, name, article, miniText, "");
+                productB18[7] = miniText;
+                edits = true;
+            }
+
+            if (chekedFullText)
             {
                 fullText = Replace(fullTextTemplate, name, article, "", fullText);
                 productB18[8] = fullText;

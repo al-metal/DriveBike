@@ -45,6 +45,7 @@
             this.tbPassword = new System.Windows.Forms.TextBox();
             this.cbUpdateSEO = new System.Windows.Forms.CheckBox();
             this.cbFullText = new System.Windows.Forms.CheckBox();
+            this.cbMiniText = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // rtbMiniText
@@ -187,18 +188,29 @@
             // cbFullText
             // 
             this.cbFullText.AutoSize = true;
-            this.cbFullText.Location = new System.Drawing.Point(704, 187);
+            this.cbFullText.Location = new System.Drawing.Point(704, 210);
             this.cbFullText.Name = "cbFullText";
             this.cbFullText.Size = new System.Drawing.Size(165, 17);
             this.cbFullText.TabIndex = 16;
             this.cbFullText.Text = "Обновить полное описание";
             this.cbFullText.UseVisualStyleBackColor = true;
             // 
+            // cbMiniText
+            // 
+            this.cbMiniText.AutoSize = true;
+            this.cbMiniText.Location = new System.Drawing.Point(704, 187);
+            this.cbMiniText.Name = "cbMiniText";
+            this.cbMiniText.Size = new System.Drawing.Size(170, 17);
+            this.cbMiniText.TabIndex = 17;
+            this.cbMiniText.Text = "Обновить краткое описание";
+            this.cbMiniText.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(876, 524);
+            this.Controls.Add(this.cbMiniText);
             this.Controls.Add(this.cbFullText);
             this.Controls.Add(this.cbUpdateSEO);
             this.Controls.Add(this.tbPassword);
@@ -243,6 +255,7 @@
         private System.Windows.Forms.TextBox tbPassword;
         private System.Windows.Forms.CheckBox cbUpdateSEO;
         private System.Windows.Forms.CheckBox cbFullText;
+        private System.Windows.Forms.CheckBox cbMiniText;
     }
 }
 
