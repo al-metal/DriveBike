@@ -251,13 +251,15 @@ namespace DriveBike
                             if (urlProduct == "")
                             {
                                 boldOpen = boldOpenCSV;
-                                string discount = discountTemplate;
+                                discount = discountTemplate.Replace("\"", "\"\"");
+                                fullTextTemplate = FulltextStr();
                                 WriteTovarInCSV(product);
                             }
                             else
                             {
                                 boldOpen = boldOpenSite;
-                                string discount = discountTemplate.Replace("\"", "\"\"");
+                                discount = discountTemplate;
+                                fullTextTemplate = FulltextStr().Replace("\"\"", "\"");
                                 UpdatePrice(cookie, urlProduct, product);
                             }
                         }
@@ -1008,7 +1010,6 @@ namespace DriveBike
 
         private string Replace(string text, string nameTovar, string article, string miniText, string fullText)
         {
-            text = text.Replace("\"\"", "\"");
             string nameText = boldOpen + nameTovar + boldClose;
             text = text.Replace("СКИДКА", discount).Replace("НАЗВАНИЕ", nameText).Replace("АРТИКУЛ", article).Replace("МИНИТЕКСТ", miniText).Replace("ТЕКСТ", fullText).Replace("<p><br /></p><p><br /></p><p><br /></p><p>", "<p><br /></p>");
             return text;
