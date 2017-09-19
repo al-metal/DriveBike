@@ -633,7 +633,7 @@ namespace DriveBike
 
             string miniDescription = new Regex("(?<=ИНФОРМАЦИЯ:</h2>)[\\w\\W]*?(?=</div>)").Match(otvTovar).ToString().Trim();
             string numberCatalog = new Regex("Номер по каталогу:.*?<br />").Match(miniDescription).ToString();
-            
+
             string codeCatalog = new Regex("(?<=Код товара: )[\\w\\W]*?(?=<br />)").Match(miniDescription).ToString();
             miniDescription = miniDescription.Replace(numberCatalog, "").Replace(codeCatalog, articl).Replace("'", "\"");
 
@@ -651,7 +651,7 @@ namespace DriveBike
             ahref = new Regex("<a.*?</a>").Matches(fullDescription);
             if (ahref.Count != 0)
                 fullDescription = ReplaceUrl(ahref, fullDescription);
-            
+
             MatchCollection atributes = new Regex("(?<=<table).*?(?=>)").Matches(fullDescriptionTable);
             if (atributes.Count != 0)
                 fullDescriptionTable = ReplaceUrl(atributes, fullDescriptionTable);
