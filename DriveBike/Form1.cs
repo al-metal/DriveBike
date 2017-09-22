@@ -284,8 +284,8 @@ namespace DriveBike
             {
                 string categories = new Regex("(?<=<a href=\").*?(?=\">)").Match(categoriesUrls[i].ToString()).ToString();
 
-                string section1 = "Расходники для японских, европейских, американских мотоциклов";
                 string section2 = new Regex("(?<=\">).*?(?=</a>)").Match(categoriesUrls[i].ToString()).ToString();
+                string section1 = ReturnSection1(section2);
 
                 otv = nethouse.getRequest(categories + "?limit=60");
 
@@ -326,11 +326,15 @@ namespace DriveBike
                             if (urlProduct == "")
                             {
                                 boldOpen = boldOpenCSV;
+                                discount = discountTemplate.Replace("\"", "\"\"");
+                                fullTextTemplate = FulltextStr();
                                 WriteTovarInCSV(product);
                             }
                             else
                             {
                                 boldOpen = boldOpenSite;
+                                discount = discountTemplate;
+                                fullTextTemplate = FulltextStr().Replace("\"\"", "\"");
                                 UpdatePrice(cookie, urlProduct, product);
                             }
                         }
@@ -339,10 +343,11 @@ namespace DriveBike
                 } while (pages < countPages);
 
                 UploadNewProductInB18(cookie);
-
-                DeleteTovarsInBike18(cookie, "https://bike18.ru/products/category/rashodniki-dlya-yaponskih-evropeyskih-amerikanskih-motociklov");
-                DeleteTovarsInBike18(cookie, "https://bike18.ru/products/category/zapchasti-dlya-yaponskih-evropeyskih-amerikanskih-motociklov");
             }
+            DeleteTovarsInBike18(cookie, "https://bike18.ru/products/category/rashodniki-dlya-yaponskih-evropeyskih-amerikanskih-motociklov");
+            DeleteTovarsInBike18(cookie, "https://bike18.ru/products/category/zapchasti-dlya-yaponskih-evropeyskih-amerikanskih-motociklov");
+            DeleteTovarsInBike18(cookie, "https://bike18.ru/products/category/2937145");
+
             MessageBox.Show("Обновлено товаров на сайте " + editsProduct +
                 "\nУдалено товаров " + delTovar);
         }
@@ -384,6 +389,57 @@ namespace DriveBike
                     break;
                 case "Фильтры":
                     section1 = "Расходники для мототехники";
+                    break;
+                case "Багаж - кофры, сумки, багажники":
+                    section1 = "Аксессуары";
+                    break;
+                case "Ветровые стекла":
+                    section1 = "Аксессуары";
+                    break;
+                case "Глушители и выхлопные системы":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
+                    break;
+                case "Двигатель":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
+                    break;
+                case "Декоративные детали и тюнинг":
+                    section1 = "Аксессуары";
+                    break;
+                case "Дуги и слайдеры":
+                    section1 = "Аксессуары";
+                    break;
+                case "Зеркала":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
+                    break;
+                case "Колеса":
+                    section1 = "Расходники для мототехники";
+                    break;
+                case "Кузовные детали":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
+                    break;
+                case "Подвеска и вилка":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
+                    break;
+                case "Подножки и платформы":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
+                    break;
+                case "Световые приборы":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
+                    break;
+                case "Спинки, сиденья, багажники":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
+                    break;
+                case "Тормозная система":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
+                    break;
+                case "Трансмиссия":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
+                    break;
+                case "Управление-руль, ручки, рычаги, педали и прочее":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
+                    break;
+                case "Электрика":
+                    section1 = "Запчасти для японских, европейских, американских мотоциклов";
                     break;
 
                 default:
@@ -633,6 +689,14 @@ namespace DriveBike
 
             string miniDescription = new Regex("(?<=ИНФОРМАЦИЯ:</h2>)[\\w\\W]*?(?=</div>)").Match(otvTovar).ToString().Trim();
             string numberCatalog = new Regex("Номер по каталогу:.*?<br />").Match(miniDescription).ToString();
+            if(numberCatalog == "")
+            {
+                numberCatalog = new Regex("(?<=Номер по каталогу: ).*").Match(miniDescription).ToString();
+            }
+            if (numberCatalog == "")
+            {
+                numberCatalog = new Regex("(?<=Номер по каталогу производителя: ).*").Match(miniDescription).ToString();
+            }
 
             string codeCatalog = new Regex("(?<=Код товара: )[\\w\\W]*?(?=<br />)").Match(miniDescription).ToString();
             miniDescription = miniDescription.Replace(numberCatalog, "").Replace(codeCatalog, articl).Replace("'", "\"");
@@ -642,12 +706,12 @@ namespace DriveBike
                 miniDescription = ReplaceUrl(ahref, miniDescription);
 
             string fullDescriptionTable = new Regex("(?<=<div class=\"attribute-specs\">)[\\w\\W]*?</table>").Match(otvTovar).ToString().Trim().Replace("\r\n", "");
-            string fullDescription = new Regex("(?<=<div class=\"std\" itemprop=\"description\">)[\\w\\W]*?(?=</div>)").Match(otvTovar).ToString().Trim().Replace("\r\n", "");
+            string fullDescription = new Regex("(?<=<meta itemprop=\"description\" content=\").*?(?=\")").Match(otvTovar).ToString().Trim().Replace("\r\n", "");
 
             ahref = new Regex("<a.*?</a>").Matches(fullDescriptionTable);
             if (ahref.Count != 0)
                 fullDescriptionTable = ReplaceUrl(ahref, fullDescriptionTable);
-
+            
             ahref = new Regex("<a.*?</a>").Matches(fullDescription);
             if (ahref.Count != 0)
                 fullDescription = ReplaceUrl(ahref, fullDescription);
