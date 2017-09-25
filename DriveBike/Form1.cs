@@ -19,6 +19,7 @@ namespace DriveBike
         CHPU chpu = new CHPU();
         WebClient webClient = new WebClient();
         nethouse nethouse = new nethouse();
+        FileEdit files = new FileEdit();
 
         int editsProduct = 0;
         int delTovar = 0;
@@ -27,7 +28,6 @@ namespace DriveBike
         string boldOpenSite = "<span style=\"font-weight: bold; font-weight: bold;\">";
         string boldClose = "</span>";
         double discounts = 0.02;
-        FileEdit files = new FileEdit();
         string otv = null;
         string miniTextTemplate = "";
         string fullTextTemplate = "";
