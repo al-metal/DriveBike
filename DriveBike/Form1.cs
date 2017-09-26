@@ -239,9 +239,7 @@ namespace DriveBike
                         if (!buyTovar)
                             continue;
 
-                        string otvTovar = nethouse.getRequest(urlTovar);
-
-                        List<string[]> tovarDB = getTovarDB(otvTovar, section1, section2);
+                        List<string[]> tovarDB = getTovarDB(urlTovar, section1, section2);
 
                         string[] resultSearch = SearchTovar(tovarDB);
 
@@ -315,6 +313,9 @@ namespace DriveBike
                         string otvTovar = nethouse.getRequest(urlTovar);
 
                         List<string[]> tovarDB = getTovarDB(otvTovar, section1, section2);
+
+                        if (tovarDB == null)
+                            continue;
 
                         string[] resultSearch = SearchTovar(tovarDB);
 
@@ -672,11 +673,18 @@ namespace DriveBike
             return search;
         }
 
-        private List<string[]> getTovarDB(string otvTovar, string section1, string section2)
+        private List<string[]> getTovarDB(string urlProduct, string section1, string section2)
         {
+            string otvTovar = nethouse.getRequest(urlProduct);
+
             List<string[]> tovarsList = new List<string[]>();
             string[] product = new string[6];
 
+            if (otvTovar == "err")
+            {
+                return tovarsList = null;
+            }
+            
             string articl = new Regex("(?<=Код товара:).*?(?=<br />)").Match(otvTovar).ToString().Trim();
             if (articl == "")
             {
