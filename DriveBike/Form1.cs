@@ -714,7 +714,11 @@ namespace DriveBike
             {
                 miniDescription = miniDescription.Replace(codeCatalog, articl);
             }
-            miniDescription = miniDescription.Replace(numberCatalog, "").Replace("'", "\"");
+            if (numberCatalog != "")
+            {
+                miniDescription = miniDescription.Replace(numberCatalog, "");
+            }
+            miniDescription = miniDescription.Replace("'", "\"");
 
             MatchCollection ahref = new Regex("<a.*?</a>").Matches(miniDescription);
             if (ahref.Count != 0)
