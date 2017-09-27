@@ -241,6 +241,9 @@ namespace DriveBike
 
                         List<string[]> tovarDB = getTovarDB(urlTovar, section1, section2);
 
+                        if (tovarDB == null)
+                            continue;
+
                         string[] resultSearch = SearchTovar(tovarDB);
 
                         for (int y = 0; resultSearch.Length > y; y++)
