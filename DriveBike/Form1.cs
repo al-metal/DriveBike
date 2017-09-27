@@ -690,6 +690,10 @@ namespace DriveBike
             {
                 articl = new Regex("(?<=Номер по каталогу производителя:).*(?=</br>)").Match(otvTovar).ToString().Trim();
             }
+            if(articl == "")
+            {
+                return tovarsList = null;
+            }
             articl = "DB_" + articl.Replace("-", "_");
 
             string urlImageProduct = new Regex("(?<=id=\"image\" src=\").*?(?=\")").Match(otvTovar).ToString();
