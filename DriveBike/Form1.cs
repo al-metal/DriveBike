@@ -275,7 +275,6 @@ namespace DriveBike
 
             //запчасти
             File.Delete("naSite.csv");
-            File.Delete("allTovars");
             nethouse.NewListUploadinBike18("naSite");
 
             otv = nethouse.getRequest("https://www.drivebike.ru/zapchasti");
@@ -687,13 +686,13 @@ namespace DriveBike
             {
                 return tovarsList = null;
             }
-            
+
             string articl = new Regex("(?<=Код товара:).*?(?=<br />)").Match(otvTovar).ToString().Trim();
             if (articl == "")
             {
                 articl = new Regex("(?<=Номер по каталогу производителя:).*(?=</br>)").Match(otvTovar).ToString().Trim();
             }
-            if(articl == "")
+            if (articl == "")
             {
                 return tovarsList = null;
             }
