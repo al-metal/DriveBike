@@ -460,8 +460,8 @@ namespace DriveBike
 
             string otv = null;
             otv = nethouse.getRequest(url);
-            MatchCollection product = new Regex("(?<=<a href=\").*(?=\"><div class=\"-relative item-image\")").Matches(otv);
-            MatchCollection razdel = new Regex("(?<=<div class=\"category-capt-txt -text-center\"><a href=\").*?(?=\" class=\"blue\">)").Matches(otv);
+            MatchCollection product = new Regex("(?<=<div class=\"product-item__content\"><a href=\").*?(?=\")").Matches(otv);
+            MatchCollection razdel = new Regex("(?<=<div class=\"category-item__link\"><a href=\").*?(?=\">)").Matches(otv);
             if (razdel.Count == 0)
             {
                 if (product.Count != 0)
@@ -476,10 +476,9 @@ namespace DriveBike
             {
                 for (int i = 0; razdel.Count > i; i++)
                 {
-                    url = razdel[i].ToString();
+                    url = "https://bike18.ru" + razdel[i].ToString() + "?page=all";
                     otv = nethouse.getRequest(url);
-                    product = new Regex("(?<=<a href=\").*(?=\"><div class=\"-relative item-image\")").Matches(otv);
-                    List<string> tovar = new List<string>();
+                    product = new Regex("(?<=<div class=\"product-item__content\"><a href=\").*?(?=\")").Matches(otv);
                     if (product.Count != 0)
                     {
                         for (int m = 0; product.Count > m; m++)
@@ -510,7 +509,10 @@ namespace DriveBike
                 string name = str[1];
                 string articl = str[0];
                 if (articl == articleB18 && name == nameB18)
+                {
                     b = true;
+                    break;
+                }
             }
             if (!b)
             {
@@ -531,7 +533,7 @@ namespace DriveBike
 
         private void WrireArticleTovar(string article, string name)
         {
-            StreamWriter sw = new StreamWriter("allTovars", true);
+            StreamWriter sw = new StreamWriter("allTovars", true, Encoding.GetEncoding(1251));
             sw.WriteLine(article + ";" + name);
             sw.Close();
         }
