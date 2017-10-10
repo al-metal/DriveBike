@@ -907,7 +907,15 @@ namespace DriveBike
                 return;
             }
 
-            otv = nethouse.getRequest("https://bike18.ru/products/category/rashodniki-dlya-tehniki");
+            UpdateAllImages("https://bike18.ru/products/category/rashodniki-dlya-tehniki");
+            UpdateAllImages("https://bike18.ru/products/category/zapchasti-dlya-yaponskih-evropeyskih-amerikanskih-motociklov");
+
+            MessageBox.Show("Обновленно " + countUpdateImage + "карточек товара");
+        }
+
+        private void UpdateAllImages(string url)
+        {
+            otv = nethouse.getRequest(url);
 
             MatchCollection razdels = new Regex("(?<=<div class=\"category-item__link\"><a href=\").*?(?=\">)").Matches(otv);
             for (int i = 0; razdels.Count > i; i++)
@@ -919,174 +927,8 @@ namespace DriveBike
                     string urlTovar = s.ToString();
                     UpdateImage(urlTovar);
 
-                    /*string urlTovar = tovars[n].ToString().Replace("http://bike18.ru/", "http://bike18.nethouse.ru/");
-
-                    otv = nethouse.PostRequest(cookie, urlTovar);
-                    string articl = new Regex("(?<=Артикул:)[\\w\\W]*?(?=</div><div>)").Match(otv).ToString().Replace("\n", "").Trim();
-                    if (articl.Length > 11)
-                    {
-                        articl = new Regex("(?<=Артикул:)[\\w\\W]*(?=</title>)").Match(otv).ToString().Trim();
-                    }
-                    if (File.Exists("pic\\" + articl + ".jpg"))
-                    {
-                        MatchCollection prId = new Regex("(?<=data-id=\").*?(?=\")").Matches(otv);
-                        int prodId = Convert.ToInt32(prId[0].ToString());
-                        bool b = true;
-                        double widthImg = 0;
-                        double heigthImg = 0;
-
-                        try
-                        {
-                            Image newImg = Image.FromFile("pic\\" + articl + ".jpg");
-                            widthImg = newImg.Width;
-                            heigthImg = newImg.Height;
-                        }
-                        catch
-                        {
-                            b = false;
-                        }
-
-                        if (b)
-                        {
-                            if (widthImg > heigthImg)
-                            {
-                                double dblx = widthImg * 0.9;
-                                if (dblx < heigthImg)
-                                {
-                                    heigthImg = heigthImg * 0.9;
-                                }
-                                else
-                                    widthImg = widthImg * 0.9;
-                            }
-                            else
-                            {
-                                double dblx = heigthImg * 0.9;
-                                if (dblx < widthImg)
-                                {
-                                    widthImg = widthImg * 0.9;
-                                }
-                                else
-                                    heigthImg = heigthImg * 0.9;
-                            }
-
-                            string otvimg = DownloadImages(articl);
-                            string urlSaveImg = new Regex("(?<=url\":\").*?(?=\")").Match(otvimg).Value.Replace("\\/", "%2F");
-                            string otvSave = SaveImages(urlSaveImg, prodId, widthImg, heigthImg);
-                            List<string> listProd = webRequest.arraySaveimage(urlTovar);
-                            listProd[3] = "10833347";
-                            listProd[42] = nethouse.alsoBuyTovars(listProd);
-                            otv = nethouse.saveTovar(listProd);
-                            if (otv.Contains("errors"))
-                            {
-                                int g = 1;
-                                if (otv.Contains("slug"))
-                                {
-                                    do
-                                    {
-                                        string s = listProd[1].ToString();
-                                        s = s.Remove(s.Length - 1, 1);
-                                        s = s + g;
-                                        g++;
-                                        listProd[1] = s;
-                                        otv = nethouse.saveTovar(listProd);
-                                    }
-                                    while (otv.Contains("errors"));
-
-                                }
-
-                            }
-                        }
-                    }*/
                 }
             }
-
-            /*cookie = webRequest.webCookieBike18();
-            otv = webRequest.getRequest("https://bike18.nethouse.ru/products/category/zapchasti-dlya-yaponskih-evropeyskih-amerikanskih-motociklov");
-            razdels = new Regex("(?<=<div class=\"category-capt-txt -text-center\"><a href=\").*?(?=\" class=\"blue\">)").Matches(otv);
-            for (int i = 0; razdels.Count > i; i++)
-            {
-                otv = webRequest.getRequest(razdels[i].ToString() + "/page/all");
-                MatchCollection tovars = new Regex("(?<=<div class=\"product-link -text-center\"><a href=\").*?(?=\" >)").Matches(otv);
-                for (int n = 0; tovars.Count > n; n++)
-                {
-                    string urlTovar = tovars[n].ToString().Replace("https://bike18.ru/", "https://bike18.nethouse.ru/");
-                    otv = webRequest.PostRequest(cookie, urlTovar);
-                    string articl = new Regex("(?<=Артикул:)[\\w\\W]*?(?=</div><div>)").Match(otv).ToString().Replace("\n", "").Trim();
-                    if (articl.Length > 11)
-                    {
-                        articl = new Regex("(?<=Артикул:)[\\w\\W]*(?=</title>)").Match(otv).ToString().Trim();
-                    }
-                    if (File.Exists("pic\\" + articl + ".jpg"))
-                    {
-                        MatchCollection prId = new Regex("(?<=data-id=\").*?(?=\")").Matches(otv);
-                        int prodId = Convert.ToInt32(prId[0].ToString());
-                        bool b = true;
-                        double widthImg = 0;
-                        double heigthImg = 0;
-
-                        try
-                        {
-                            Image newImg = Image.FromFile("pic\\" + articl + ".jpg");
-                            widthImg = newImg.Width;
-                            heigthImg = newImg.Height;
-                        }
-                        catch
-                        {
-                            b = false;
-                        }
-
-                        if (b)
-                        {
-                            if (widthImg > heigthImg)
-                            {
-                                double dblx = widthImg * 0.9;
-                                if (dblx < heigthImg)
-                                {
-                                    heigthImg = heigthImg * 0.9;
-                                }
-                                else
-                                    widthImg = widthImg * 0.9;
-                            }
-                            else
-                            {
-                                double dblx = heigthImg * 0.9;
-                                if (dblx < widthImg)
-                                {
-                                    widthImg = widthImg * 0.9;
-                                }
-                                else
-                                    heigthImg = heigthImg * 0.9;
-                            }
-
-                            string otvimg = DownloadImages(articl);
-                            string urlSaveImg = new Regex("(?<=url\":\").*?(?=\")").Match(otvimg).Value.Replace("\\/", "%2F");
-                            string otvSave = SaveImages(urlSaveImg, prodId, widthImg, heigthImg);
-                            List<string> listProd = webRequest.arraySaveimage(urlTovar);
-                            listProd[3] = "10833347";
-                            listProd[42] = nethouse.alsoBuyTovars(listProd);
-                            otv = webRequest.saveTovar(listProd);
-                            if (otv.Contains("errors"))
-                            {
-                                int g = 1;
-                                if (otv.Contains("slug"))
-                                {
-                                    do
-                                    {
-                                        string s = listProd[1].ToString();
-                                        s = s.Remove(s.Length - 1, 1);
-                                        s = s + g;
-                                        g++;
-                                        listProd[1] = s;
-                                        otv = webRequest.saveTovar(listProd);
-                                    }
-                                    while (otv.Contains("errors"));
-                                }
-                            }
-                        }
-                    }
-                }
-            }*/
-            MessageBox.Show("Обновленно " + countUpdateImage + "карточек товара");
         }
 
         private void UpdateImage(string urlTovar)
@@ -1102,6 +944,11 @@ namespace DriveBike
             images = listProd[32];
             alsoby = listProd[42];
             productGroupe = listProd[3];
+
+            if (!articl.Contains("DB_"))
+            {
+                return;
+            }
 
             if (listProd[9] == "")
                 listProd[9] = "0";
