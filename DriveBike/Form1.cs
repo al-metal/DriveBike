@@ -448,7 +448,7 @@ namespace DriveBike
                     break;
 
                 default:
-                    section1 = "Расходники для японских, европейских, американских мотоциклов";
+                    section1 = "Расходники для мототехники";
                     break;
             }
             return section1;
